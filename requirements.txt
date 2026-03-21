@@ -1,0 +1,29 @@
+# imagineAI Requirements
+# Install with: pip install -r requirements.txt
+
+# Core
+numpy>=1.21.0
+
+# Embeddings (choose one or more)
+sentence-transformers>=2.2.0  # Recommended for best quality
+gensim>=4.0.0                 # Alternative: GloVe/Word2Vec
+
+# LLM / Text Generation
+transformers>=4.30.0
+torch>=2.0.0
+accelerate>=0.20.0
+
+# Knowledge Retrieval
+wikipedia-api>=0.5.0
+requests>=2.28.0
+
+# Optional: HuggingFace Hub
+huggingface-hub>=0.14.0
+
+# Optional: API serving
+# fastapi>=0.95.0
+# uvicorn>=0.22.0
+
+# Development
+# pytest>=7.0.0
+# jupyter>=1.0.0

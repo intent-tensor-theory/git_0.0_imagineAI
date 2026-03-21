@@ -1,0 +1,7 @@
+# Minimal requirements for testing imagineAI
+# Install with: pip install -r requirements-minimal.txt
+
+numpy>=1.21.0
+gensim>=4.0.0        # For GloVe embeddings
+wikipedia-api>=0.5.0  # For Wikipedia knowledge
+requests>=2.28.0
