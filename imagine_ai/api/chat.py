@@ -119,6 +119,7 @@ class ImagineAI:
             for keywords, fact in test_kb.facts.items():
                 self.generator.add_knowledge(keywords, fact)
             self._log(f"Added {len(test_kb.facts)} facts to generator")
+            print(f"[DEBUG] Generator knowledge base has {len(self.generator.knowledge_base)} entries")
     
     def _init_knowledge(self, use_wikipedia: bool):
         """Initialize knowledge retrieval"""

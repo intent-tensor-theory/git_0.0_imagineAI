@@ -291,13 +291,19 @@ class SimpleGenerator(ResponseGenerator):
     ) -> str:
         question_lower = question.lower()
         
+        # Debug output
+        print(f"[DEBUG] Question: {question_lower}")
+        print(f"[DEBUG] Knowledge base size: {len(self.knowledge_base)}")
+        
         # First: Check local knowledge base (most reliable)
         for keyword, answer in self.knowledge_base.items():
             keyword_words = keyword.lower().split()
             significant_words = [w for w in keyword_words if len(w) > 3]
             if significant_words:
                 matches = sum(1 for word in significant_words if word in question_lower)
+                print(f"[DEBUG] Checking '{keyword}': significant={significant_words}, matches={matches}/{len(significant_words)}")
                 if matches >= len(significant_words) / 2:
+                    print(f"[DEBUG] MATCH FOUND!")
                     return answer
         
         # Second: Check if context contains useful info (from Wikipedia/knowledge retrieval)
