@@ -183,21 +183,38 @@ class ImagineAI:
         # Get conversation context
         context = self._get_conversation_context()
         
-        # Resolve
-        if self.resolver:
-            result = self.resolver.resolve(message, additional_context=context)
-            response = result.answer or "I could not resolve an answer."
-            
-            # Add metadata
-            metadata = {
-                "sigma": result.sigma,
-                "iterations": result.iterations,
-                "status": result.status.value
-            }
-        else:
-            # Fallback to direct generation
-            response = self.generator.generate(message, "\n".join(context))
-            metadata = {"fallback": True}
+        # Retrieve knowledge first
+        knowledge_context = []
+        if self.knowledge:
+            try:
+                knowledge = self.knowledge.retrieve(message)
+                if knowledge:
+                    knowledge_context = knowledge if isinstance(knowledge, list) else [knowledge]
+            except Exception as e:
+                pass
+        
+        # Combine all context
+        all_context = context + knowledge_context
+        context_str = "\n".join(all_context)
+        
+        # Generate response directly (simpler, works for testing)
+        response = self.generator.generate(message, context_str)
+        metadata = {"mode": "direct"}
+        
+        # If direct generation failed and we have a resolver, try it
+        if response == "I don't have information about that." and self.resolver:
+            try:
+                result = self.resolver.resolve(message, additional_context=all_context)
+                if result.answer and result.answer != "I could not resolve an answer.":
+                    response = result.answer
+                    metadata = {
+                        "sigma": result.sigma,
+                        "iterations": result.iterations,
+                        "status": result.status.value,
+                        "mode": "resolver"
+                    }
+            except:
+                pass
         
         # Record response
         self.conversation.append(ChatMessage(

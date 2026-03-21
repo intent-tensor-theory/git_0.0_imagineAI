@@ -317,9 +317,14 @@ class SimpleGenerator(ResponseGenerator):
         # Second: Check local knowledge base
         for keyword, answer in self.knowledge_base.items():
             # Check if keyword words appear in question
+            # Match if ANY significant keyword word appears (not ALL)
             keyword_words = keyword.lower().split()
-            if all(word in question_lower for word in keyword_words if len(word) > 2):
-                return answer
+            significant_words = [w for w in keyword_words if len(w) > 3]
+            if significant_words:
+                matches = sum(1 for word in significant_words if word in question_lower)
+                # If at least half of significant words match, return the answer
+                if matches >= len(significant_words) / 2:
+                    return answer
         
         # Third: Check if any keyword appears in context
         if context:
