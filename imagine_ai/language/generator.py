@@ -267,9 +267,9 @@ class OllamaGenerator(ResponseGenerator):
 
 class SimpleGenerator(ResponseGenerator):
     """
-    Simple lookup-based generator for testing.
+    Simple context-based generator for testing.
     
-    No LLM required - just matches keywords to answers.
+    No LLM required - extracts answers from provided context.
     """
     
     def __init__(self, knowledge_base: dict = None):
@@ -291,15 +291,41 @@ class SimpleGenerator(ResponseGenerator):
     ) -> str:
         question_lower = question.lower()
         
-        # Look for keyword matches
+        # First: Check if context contains useful info (from Wikipedia/knowledge retrieval)
+        # This is the primary source - context is populated by the knowledge retriever
+        if context:
+            # Look for bracketed source info like [Wikipedia: Jackson]
+            # and extract the content after it
+            lines = context.split('\n')
+            for line in lines:
+                if line.strip() and not line.startswith('[') and not line.startswith('User:') and not line.startswith('Assistant:'):
+                    # This is content, not metadata
+                    # Check if it's relevant to the question
+                    if any(word in line.lower() for word in question_lower.split() if len(word) > 3):
+                        # Found relevant context - return first sentence
+                        sentences = line.split('.')
+                        if sentences:
+                            return sentences[0].strip() + '.'
+            
+            # If we have context but couldn't extract, return first meaningful line
+            for line in lines:
+                if line.strip() and not line.startswith('[') and len(line) > 20:
+                    sentences = line.split('.')
+                    if sentences and len(sentences[0]) > 10:
+                        return sentences[0].strip() + '.'
+        
+        # Second: Check local knowledge base
         for keyword, answer in self.knowledge_base.items():
-            if keyword in question_lower:
+            # Check if keyword words appear in question
+            keyword_words = keyword.lower().split()
+            if all(word in question_lower for word in keyword_words if len(word) > 2):
                 return answer
         
-        # Check context for hints
+        # Third: Check if any keyword appears in context
         if context:
+            context_lower = context.lower()
             for keyword, answer in self.knowledge_base.items():
-                if keyword in context.lower():
+                if keyword in context_lower:
                     return answer
         
         return "I don't have information about that."
