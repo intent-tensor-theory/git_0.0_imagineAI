@@ -337,7 +337,7 @@ class SimpleGenerator(ResponseGenerator):
 
 
 def get_generator(
-    generator_type: str = "auto",
+    generator_type: str = "simple",
     model_name: Optional[str] = None,
     hf_token: Optional[str] = None
 ) -> ResponseGenerator:
@@ -352,8 +352,12 @@ def get_generator(
     Returns:
         ResponseGenerator instance
     """
+    # Simple generator - no external dependencies
+    if generator_type == "simple":
+        return SimpleGenerator()
+    
     if generator_type == "auto":
-        # Try Ollama first (lightest), then HuggingFace API, then local
+        # Try Ollama first (lightest), then fall back to simple
         try:
             import requests
             response = requests.get("http://localhost:11434/api/tags", timeout=2)
@@ -362,15 +366,7 @@ def get_generator(
         except:
             pass
         
-        # Try HuggingFace API
-        token = hf_token or os.environ.get("HF_TOKEN")
-        if token:
-            return HuggingFaceAPIGenerator(
-                model_name or "meta-llama/Llama-3.2-3B-Instruct",
-                hf_token=token
-            )
-        
-        # Fall back to simple
+        # Fall back to simple - don't try HuggingFace API
         print("No LLM available. Using simple keyword matcher.")
         return SimpleGenerator()
     
@@ -388,9 +384,6 @@ def get_generator(
     
     elif generator_type == "ollama":
         return OllamaGenerator(model_name or "llama3.2:3b")
-    
-    elif generator_type == "simple":
-        return SimpleGenerator()
     
     else:
         raise ValueError(f"Unknown generator type: {generator_type}")
