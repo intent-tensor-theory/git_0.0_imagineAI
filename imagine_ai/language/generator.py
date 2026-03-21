@@ -318,6 +318,9 @@ class SimpleGenerator(ResponseGenerator):
                     continue
                 if line.startswith('[Wikipedia:'):
                     continue
+                # Skip lines that look like questions
+                if '?' in line:
+                    continue
                     
                 # This is content - check if it answers the question
                 # Must be substantial (not just a short phrase)
