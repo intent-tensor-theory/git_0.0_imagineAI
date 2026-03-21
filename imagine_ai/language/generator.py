@@ -291,47 +291,40 @@ class SimpleGenerator(ResponseGenerator):
     ) -> str:
         question_lower = question.lower()
         
-        # First: Check if context contains useful info (from Wikipedia/knowledge retrieval)
-        # This is the primary source - context is populated by the knowledge retriever
-        if context:
-            # Look for bracketed source info like [Wikipedia: Jackson]
-            # and extract the content after it
-            lines = context.split('\n')
-            for line in lines:
-                if line.strip() and not line.startswith('[') and not line.startswith('User:') and not line.startswith('Assistant:'):
-                    # This is content, not metadata
-                    # Check if it's relevant to the question
-                    if any(word in line.lower() for word in question_lower.split() if len(word) > 3):
-                        # Found relevant context - return first sentence
-                        sentences = line.split('.')
-                        if sentences:
-                            return sentences[0].strip() + '.'
-            
-            # If we have context but couldn't extract, return first meaningful line
-            for line in lines:
-                if line.strip() and not line.startswith('[') and len(line) > 20:
-                    sentences = line.split('.')
-                    if sentences and len(sentences[0]) > 10:
-                        return sentences[0].strip() + '.'
-        
-        # Second: Check local knowledge base
+        # First: Check local knowledge base (most reliable)
         for keyword, answer in self.knowledge_base.items():
-            # Check if keyword words appear in question
-            # Match if ANY significant keyword word appears (not ALL)
             keyword_words = keyword.lower().split()
             significant_words = [w for w in keyword_words if len(w) > 3]
             if significant_words:
                 matches = sum(1 for word in significant_words if word in question_lower)
-                # If at least half of significant words match, return the answer
                 if matches >= len(significant_words) / 2:
                     return answer
         
-        # Third: Check if any keyword appears in context
+        # Second: Check if context contains useful info (from Wikipedia/knowledge retrieval)
         if context:
-            context_lower = context.lower()
-            for keyword, answer in self.knowledge_base.items():
-                if keyword in context_lower:
-                    return answer
+            lines = context.split('\n')
+            for line in lines:
+                line = line.strip()
+                # Skip empty lines and conversation history
+                if not line:
+                    continue
+                if line.startswith('User:') or line.startswith('Assistant:'):
+                    continue
+                if line.startswith('[Wikipedia:'):
+                    continue
+                    
+                # This is content - check if it answers the question
+                # Must be substantial (not just a short phrase)
+                if len(line) > 30:
+                    # Check for relevance
+                    question_words = [w for w in question_lower.split() if len(w) > 3]
+                    line_lower = line.lower()
+                    matches = sum(1 for w in question_words if w in line_lower)
+                    if matches >= 1:
+                        # Return first sentence of this relevant content
+                        sentences = line.split('.')
+                        if sentences and len(sentences[0]) > 10:
+                            return sentences[0].strip() + '.'
         
         return "I don't have information about that."
 
