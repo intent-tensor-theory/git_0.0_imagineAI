@@ -47,7 +47,7 @@ class ImagineAI:
     def __init__(
         self,
         embedding_backend: str = "auto",
-        generator_type: str = "auto",
+        generator_type: str = "simple",  # Changed from "auto" - use simple for reliability
         use_wikipedia: bool = True,
         hf_token: Optional[str] = None,
         verbose: bool = False
@@ -99,7 +99,8 @@ class ImagineAI:
         """Initialize the response generator (LLM)"""
         self._log(f"Initializing generator ({generator_type})...")
         
-        from ..language.generator import get_generator
+        from ..language.generator import get_generator, SimpleGenerator
+        from ..language.knowledge import create_test_knowledge
         
         try:
             self.generator = get_generator(
@@ -110,8 +111,14 @@ class ImagineAI:
         except Exception as e:
             self._log(f"Generator init failed: {e}")
             # Fall back to simple generator
-            from ..language.generator import SimpleGenerator
             self.generator = SimpleGenerator()
+        
+        # If using SimpleGenerator, populate it with test knowledge
+        if isinstance(self.generator, SimpleGenerator):
+            test_kb = create_test_knowledge()
+            for keywords, fact in test_kb.facts.items():
+                self.generator.add_knowledge(keywords, fact)
+            self._log(f"Added {len(test_kb.facts)} facts to generator")
     
     def _init_knowledge(self, use_wikipedia: bool):
         """Initialize knowledge retrieval"""
