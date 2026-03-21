@@ -65,7 +65,7 @@ def run_interactive():
     
     ai = ImagineAI(
         embedding_backend="auto",
-        generator_type="auto",
+        generator_type="simple",
         use_wikipedia=True,
         verbose=False
     )
