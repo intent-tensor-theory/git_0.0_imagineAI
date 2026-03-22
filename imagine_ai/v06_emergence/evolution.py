@@ -221,6 +221,8 @@ def find_answer_in_substrate(
     The answer must:
     1. Be close to the stable configuration (Φ_final)
     2. Satisfy anchor constraints (ρ_q)
+    3. NOT have disqualifying words (second, land-only, etc.)
+    4. Have anchors close together (proximity bonus)
     
     This is the writability gate: only configurations
     that respect boundaries can be valid answers.
@@ -228,10 +230,23 @@ def find_answer_in_substrate(
     if not facts or not fact_embeddings:
         return None, 0.0
     
+    # Words that indicate a partial/qualified answer (should be penalized)
+    QUALIFIER_PENALTY = {
+        'second': 0.3, 'third': 0.2, 'fourth': 0.1, 'fifth': 0.1,
+        'one of': 0.5, 'among': 0.5, 'nearly': 0.7, 'almost': 0.7,
+    }
+    
+    # Words that indicate specificity when anchor is general
+    SPECIFICITY_QUALIFIERS = {'land', 'sea', 'marine', 'flying', 'bird'}
+    
     # Score each fact
     scores = []
     
     for i, (fact, emb) in enumerate(zip(facts, fact_embeddings)):
+        fact_lower = fact.lower()
+        fact_words_list = fact_lower.split()
+        fact_words = set(fact_words_list)
+        
         # Component 1: Semantic similarity to Φ_final
         if np.linalg.norm(emb) > 0 and np.linalg.norm(Φ_final) > 0:
             semantic_sim = np.dot(Φ_final, emb) / (np.linalg.norm(Φ_final) * np.linalg.norm(emb))
@@ -239,48 +254,87 @@ def find_answer_in_substrate(
             semantic_sim = 0.0
         
         # Component 2: Anchor satisfaction (ρ_q constraint)
-        # Each anchor contributes a score based on best match in fact
         anchor_score = 0.0
+        anchor_positions = []  # Track where anchors appear
+        
         if anchor_words:
-            fact_lower = fact.lower()
-            fact_words = set(fact_lower.split())
-            
             for anchor in anchor_words:
                 best_match = 0.0
+                best_pos = -1
                 
-                # Direct match (perfect)
-                if anchor in fact_lower:
-                    best_match = 1.0
-                else:
-                    # Semantic match via GloVe (soft)
-                    for word in fact_words:
-                        if word in glove and anchor in glove:
-                            sim = glove.similarity(anchor, word)
-                            # Use sigmoid to convert similarity to score
-                            # sim=0.4 → score~0.6, sim=0.7 → score~0.9
+                # Direct match (whole word only)
+                # Check if anchor is a complete word in the fact
+                for pos, word in enumerate(fact_words_list):
+                    # Strip punctuation for comparison
+                    clean_word = word.strip('.,!?;:\'"()[]')
+                    if anchor == clean_word:
+                        best_match = 1.0
+                        best_pos = pos
+                        break
+                
+                # If no direct match, try semantic match
+                if best_match < 1.0:
+                    for pos, word in enumerate(fact_words_list):
+                        clean_word = word.strip('.,!?;:\'"()[]')
+                        if clean_word in glove and anchor in glove:
+                            sim = glove.similarity(anchor, clean_word)
                             match_score = 1.0 / (1.0 + np.exp(-10 * (sim - 0.3)))
                             if match_score > best_match:
                                 best_match = match_score
+                                best_pos = pos
                 
                 anchor_score += best_match
+                if best_pos >= 0:
+                    anchor_positions.append(best_pos)
             
-            # Normalize by number of anchors
             anchor_score = anchor_score / len(anchor_words) if anchor_words else 1.0
         else:
             anchor_score = 1.0
         
-        # Combined score: anchor is primary, semantic is tiebreaker
-        # anchor_score in [0, 1], semantic_sim in [-1, 1]
-        combined = anchor_score + 0.1 * (semantic_sim + 1) / 2
+        # Component 3: Proximity bonus
+        # If multiple anchors appear close together, boost score
+        proximity_bonus = 1.0
+        if len(anchor_positions) >= 2:
+            anchor_positions.sort()
+            # Calculate average distance between consecutive anchors
+            total_dist = 0
+            for j in range(len(anchor_positions) - 1):
+                total_dist += anchor_positions[j+1] - anchor_positions[j]
+            avg_dist = total_dist / (len(anchor_positions) - 1)
+            
+            # Close together (dist <= 3) gets bonus, far apart gets penalty
+            if avg_dist <= 3:
+                proximity_bonus = 1.5  # Big bonus for adjacent anchors
+            elif avg_dist <= 5:
+                proximity_bonus = 1.2
+            elif avg_dist > 10:
+                proximity_bonus = 0.8  # Penalty for far apart
         
-        scores.append((i, fact, combined, semantic_sim, anchor_score))
+        # Component 4: Qualifier penalty
+        qualifier_penalty = 1.0
+        for qual, penalty in QUALIFIER_PENALTY.items():
+            if qual in fact_lower:
+                qualifier_penalty *= penalty
+        
+        # Component 5: Specificity penalty
+        specificity_penalty = 1.0
+        if anchor_words:
+            anchor_set = set(anchor_words)
+            for qual in SPECIFICITY_QUALIFIERS:
+                if qual in fact_words and qual not in anchor_set:
+                    specificity_penalty *= 0.7
+        
+        # Combined score
+        combined = anchor_score * proximity_bonus * qualifier_penalty * specificity_penalty + 0.05 * (semantic_sim + 1) / 2
+        
+        scores.append((i, fact, combined, anchor_score, proximity_bonus))
     
     # Sort by combined score
     scores.sort(key=lambda x: x[2], reverse=True)
     
     # Return best fact
     if scores:
-        best_idx, best_fact, best_score, sem_sim, anch_score = scores[0]
-        return best_fact, anch_score
+        best_idx, best_fact, best_score, anch_score, prox = scores[0]
+        return best_fact, best_score
     
     return None, 0.0
