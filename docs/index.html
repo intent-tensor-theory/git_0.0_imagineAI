@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>imagineAI v1.1 - Semantic Understanding</title>
+    <title>imagineAI v1.1 - Semantic Understanding + Wikipedia</title>
     <style>
         :root {
             --bg-primary: #0a0a0f;
@@ -15,14 +15,12 @@
             --accent-glow: rgba(99, 102, 241, 0.3);
             --success: #22c55e;
             --warning: #f59e0b;
+            --error: #ef4444;
+            --info: #3b82f6;
             --border: #2a2a3a;
         }
         
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         
         body {
             font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -33,60 +31,85 @@
             flex-direction: column;
         }
         
-        /* Header */
         .header {
-            padding: 1.5rem 2rem;
+            padding: 1rem 2rem;
             border-bottom: 1px solid var(--border);
             background: var(--bg-secondary);
-        }
-        
-        .header h1 {
-            font-size: 1.5rem;
-            font-weight: 600;
             display: flex;
+            justify-content: space-between;
             align-items: center;
-            gap: 0.75rem;
+            flex-wrap: wrap;
+            gap: 1rem;
         }
         
-        .header h1 .logo {
-            width: 32px;
-            height: 32px;
+        .header-left { display: flex; align-items: center; gap: 0.75rem; }
+        
+        .logo {
+            width: 36px; height: 36px;
             background: linear-gradient(135deg, var(--accent), #8b5cf6);
             border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1rem;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.2rem; font-weight: bold;
         }
         
-        .header .subtitle {
-            font-size: 0.85rem;
-            color: var(--text-secondary);
-            margin-top: 0.25rem;
-        }
-        
+        .header h1 { font-size: 1.4rem; font-weight: 600; }
         .header .version {
-            display: inline-block;
             background: var(--accent);
             color: white;
-            padding: 0.2rem 0.5rem;
+            padding: 0.15rem 0.4rem;
             border-radius: 4px;
-            font-size: 0.7rem;
+            font-size: 0.65rem;
             margin-left: 0.5rem;
         }
+        .header .subtitle { font-size: 0.75rem; color: var(--text-secondary); }
         
-        /* Chat Container */
-        .chat-container {
-            flex: 1;
+        .mode-toggle {
             display: flex;
-            flex-direction: column;
-            max-width: 900px;
-            width: 100%;
-            margin: 0 auto;
-            padding: 1rem;
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            padding: 4px;
+        }
+        .mode-toggle button {
+            padding: 0.5rem 1rem;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.2s;
+        }
+        .mode-toggle button.active {
+            background: var(--accent);
+            color: white;
         }
         
-        /* Messages Area */
+        .main-container {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 1rem;
+            padding: 1rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+        }
+        
+        @media (max-width: 900px) {
+            .main-container { grid-template-columns: 1fr; }
+            .analysis-panel { order: -1; }
+        }
+        
+        /* Chat Panel */
+        .chat-panel {
+            display: flex;
+            flex-direction: column;
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+        }
+        
         .messages {
             flex: 1;
             overflow-y: auto;
@@ -94,13 +117,13 @@
             display: flex;
             flex-direction: column;
             gap: 1rem;
+            min-height: 400px;
         }
         
         .message {
-            max-width: 85%;
-            padding: 1rem 1.25rem;
-            border-radius: 16px;
-            line-height: 1.5;
+            max-width: 90%;
+            padding: 1rem;
+            border-radius: 12px;
             animation: fadeIn 0.3s ease;
         }
         
@@ -121,755 +144,770 @@
             border: 1px solid var(--border);
         }
         
-        .message .answer-text {
-            font-size: 1.05rem;
-            margin-bottom: 0.75rem;
+        .message .source-badge {
+            display: inline-block;
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.65rem;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            font-weight: 600;
         }
+        .source-badge.local { background: var(--success); color: white; }
+        .source-badge.wikipedia { background: var(--info); color: white; }
+        .source-badge.unknown { background: var(--error); color: white; }
         
+        .message .answer { font-size: 1rem; margin-bottom: 0.5rem; }
         .message .meta {
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             color: var(--text-secondary);
+            font-family: monospace;
             padding-top: 0.5rem;
             border-top: 1px solid var(--border);
-            font-family: 'SF Mono', Consolas, monospace;
         }
         
-        /* Corrections display */
-        .corrections {
-            background: rgba(245, 158, 11, 0.1);
-            border: 1px solid rgba(245, 158, 11, 0.3);
-            border-radius: 8px;
-            padding: 0.5rem 0.75rem;
-            margin-bottom: 0.75rem;
-            font-size: 0.85rem;
-        }
-        
-        .corrections .label {
-            color: var(--warning);
-            font-weight: 600;
-            font-size: 0.7rem;
-            text-transform: uppercase;
-            margin-bottom: 0.25rem;
-        }
-        
-        .correction-item {
-            display: inline-block;
-            background: var(--bg-secondary);
-            padding: 0.2rem 0.5rem;
-            border-radius: 4px;
-            margin: 0.15rem;
-            font-family: 'SF Mono', Consolas, monospace;
-            font-size: 0.8rem;
-        }
-        
-        .correction-item .old {
-            color: var(--text-secondary);
-            text-decoration: line-through;
-        }
-        
-        .correction-item .arrow {
-            color: var(--warning);
-            margin: 0 0.25rem;
-        }
-        
-        .correction-item .new {
-            color: var(--success);
-        }
-        
-        /* Input Area */
         .input-area {
-            padding: 1rem 2rem;
+            padding: 1rem;
             border-top: 1px solid var(--border);
-            background: var(--bg-secondary);
-        }
-        
-        .input-wrapper {
-            max-width: 900px;
-            margin: 0 auto;
             display: flex;
-            gap: 0.75rem;
+            gap: 0.5rem;
         }
         
-        .input-wrapper input {
+        .input-area input {
             flex: 1;
             background: var(--bg-tertiary);
             border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 0.875rem 1.25rem;
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
             color: var(--text-primary);
             font-size: 1rem;
             outline: none;
-            transition: border-color 0.2s;
         }
+        .input-area input:focus { border-color: var(--accent); }
         
-        .input-wrapper input:focus {
-            border-color: var(--accent);
-        }
-        
-        .input-wrapper input::placeholder {
-            color: var(--text-secondary);
-        }
-        
-        .input-wrapper button {
+        .input-area button {
             background: var(--accent);
             border: none;
-            border-radius: 12px;
-            padding: 0.875rem 1.5rem;
+            border-radius: 8px;
+            padding: 0.75rem 1.5rem;
             color: white;
             font-weight: 600;
             cursor: pointer;
-            transition: transform 0.1s, opacity 0.2s;
+        }
+        .input-area button:disabled { opacity: 0.5; }
+        
+        /* Analysis Panel */
+        .analysis-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
         }
         
-        .input-wrapper button:hover {
-            opacity: 0.9;
-        }
-        
-        .input-wrapper button:active {
-            transform: scale(0.98);
-        }
-        
-        .input-wrapper button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-        
-        /* Status Bar */
-        .status-bar {
-            padding: 0.5rem 1rem;
-            background: var(--bg-tertiary);
-            border-top: 1px solid var(--border);
-            font-size: 0.75rem;
-            color: var(--text-secondary);
-            text-align: center;
-        }
-        
-        .status-bar .ready {
-            color: var(--success);
-        }
-        
-        /* Welcome Message */
-        .welcome {
-            text-align: center;
-            padding: 3rem 1rem;
-            color: var(--text-secondary);
-        }
-        
-        .welcome h2 {
-            color: var(--text-primary);
-            margin-bottom: 0.5rem;
-        }
-        
-        .welcome .feature-box {
-            background: var(--bg-tertiary);
-            padding: 1rem;
-            border-radius: 8px;
-            margin: 1.5rem 0;
+        .analysis-card {
+            background: var(--bg-secondary);
             border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1rem;
         }
         
-        .welcome .feature-box h3 {
-            color: var(--accent);
-            font-size: 0.9rem;
-            margin-bottom: 0.5rem;
+        .analysis-card h3 {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
         
-        .welcome .feature-box code {
-            font-family: 'SF Mono', Consolas, monospace;
+        /* Token Analysis */
+        .token-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        
+        .token {
+            padding: 0.4rem 0.6rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            border: 1px solid var(--border);
+            background: var(--bg-tertiary);
+        }
+        
+        .token.corrected {
+            background: rgba(245, 158, 11, 0.15);
+            border-color: var(--warning);
+        }
+        .token.unknown {
+            background: rgba(239, 68, 68, 0.15);
+            border-color: var(--error);
+        }
+        .token.exact {
+            background: rgba(34, 197, 94, 0.1);
+            border-color: rgba(34, 197, 94, 0.3);
+        }
+        
+        .token .word { font-weight: 600; }
+        .token .pos {
+            font-size: 0.6rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+        }
+        .token .correction {
+            font-size: 0.6rem;
             color: var(--warning);
         }
         
-        .welcome .examples {
-            margin-top: 1.5rem;
+        /* Stats */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
         }
         
+        .stat {
+            background: var(--bg-tertiary);
+            padding: 0.5rem;
+            border-radius: 6px;
+            text-align: center;
+        }
+        .stat .value { font-size: 1.2rem; font-weight: 700; color: var(--accent); }
+        .stat .label { font-size: 0.6rem; color: var(--text-secondary); text-transform: uppercase; }
+        
+        /* Welcome */
+        .welcome {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-secondary);
+        }
+        .welcome h2 { color: var(--text-primary); margin-bottom: 0.5rem; }
+        .welcome .feature {
+            background: var(--bg-tertiary);
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+            border: 1px solid var(--border);
+        }
+        .welcome .examples { margin-top: 1rem; }
         .welcome .examples button {
             background: var(--bg-tertiary);
             border: 1px solid var(--border);
             color: var(--text-primary);
-            padding: 0.5rem 1rem;
-            border-radius: 8px;
-            margin: 0.25rem;
+            padding: 0.4rem 0.8rem;
+            border-radius: 6px;
+            margin: 0.2rem;
             cursor: pointer;
-            transition: border-color 0.2s;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
         }
+        .welcome .examples button:hover { border-color: var(--accent); }
+        .examples.wiki button { border-color: var(--info); }
         
-        .welcome .examples button:hover {
-            border-color: var(--accent);
+        /* Status Bar */
+        .status-bar {
+            padding: 0.4rem 1rem;
+            background: var(--bg-tertiary);
+            border-top: 1px solid var(--border);
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            text-align: center;
         }
+        .status-bar .ready { color: var(--success); }
         
-        .examples-messy button {
-            border-color: rgba(245, 158, 11, 0.3) !important;
+        /* Loading */
+        .loading {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 1rem;
+            color: var(--text-secondary);
         }
-        
-        .examples-messy button:hover {
-            border-color: var(--warning) !important;
+        .spinner {
+            width: 16px; height: 16px;
+            border: 2px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
         }
+        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
     <header class="header">
-        <h1>
-            <span class="logo">Δ</span>
-            imagineAI
-            <span class="version">v1.1</span>
-        </h1>
-        <p class="subtitle">Semantic Understanding • Query Compiler • Spell Correction</p>
+        <div class="header-left">
+            <div class="logo">Δ</div>
+            <div>
+                <h1>imagineAI <span class="version">v1.1</span></h1>
+                <p class="subtitle">Semantic Understanding • Wikipedia Integration</p>
+            </div>
+        </div>
+        <div class="mode-toggle">
+            <button id="modeLocal" class="active" onclick="setMode('local')">Local (788 facts)</button>
+            <button id="modeWiki" onclick="setMode('wiki')">+ Wikipedia</button>
+        </div>
     </header>
     
-    <div class="chat-container">
-        <div class="messages" id="messages">
-            <div class="welcome" id="welcome">
-                <h2>Welcome to imagineAI v1.1</h2>
-                <p>Now with <strong>Query Understanding</strong> - type naturally, even with typos!</p>
-                
-                <div class="feature-box">
-                    <h3>🧠 New in v1.1: Semantic Understanding</h3>
-                    <p>Type <code>wat is teh captial of Frace</code> and watch it resolve to <code>capital of france</code></p>
+    <div class="main-container">
+        <div class="chat-panel">
+            <div class="messages" id="messages">
+                <div class="welcome" id="welcome">
+                    <h2>imagineAI v1.1</h2>
+                    <p>Query Understanding + Real Dictionary + Wikipedia</p>
+                    
+                    <div class="feature">
+                        <strong>🧠 Now with real English dictionary</strong><br>
+                        <small>Words like "electricity", "weather", "frog" won't be mis-corrected!</small>
+                    </div>
+                    
+                    <div class="examples">
+                        <p><small>Local corpus (788 facts):</small></p>
+                        <button onclick="askExample('What is the capital of France?')">Capital of France</button>
+                        <button onclick="askExample('wat is teh bigest planit')">wat is teh bigest planit</button>
+                        <button onclick="askExample('Who painted the Mona Lisa?')">Mona Lisa</button>
+                    </div>
+                    
+                    <div class="examples wiki">
+                        <p><small style="color: var(--info);">Try with Wikipedia mode:</small></p>
+                        <button onclick="askExample('How fast is electricity?')">How fast is electricity?</button>
+                        <button onclick="askExample('What is a frog?')">What is a frog?</button>
+                        <button onclick="askExample('What causes weather?')">What causes weather?</button>
+                    </div>
                 </div>
-                
-                <p>788 facts • 100% accuracy • No hallucination • Spell correction</p>
-                
-                <div class="examples">
-                    <p style="margin-bottom: 0.5rem;">Clean queries:</p>
-                    <button onclick="askExample('What is the capital of Japan?')">Capital of Japan?</button>
-                    <button onclick="askExample('What is the largest planet?')">Largest planet?</button>
-                    <button onclick="askExample('Who painted the Mona Lisa?')">Mona Lisa?</button>
+            </div>
+            
+            <div class="input-area">
+                <input type="text" id="input" placeholder="Ask anything... typos welcome!" 
+                       onkeypress="if(event.key==='Enter')ask()" disabled>
+                <button id="sendBtn" onclick="ask()" disabled>Ask</button>
+            </div>
+        </div>
+        
+        <div class="analysis-panel">
+            <div class="analysis-card">
+                <h3>🔤 Token Analysis</h3>
+                <div class="token-grid" id="tokenGrid">
+                    <span style="color: var(--text-secondary); font-size: 0.8rem;">
+                        Ask a question to see analysis...
+                    </span>
                 </div>
-                
-                <div class="examples examples-messy" style="margin-top: 1rem;">
-                    <p style="margin-bottom: 0.5rem; color: var(--warning);">Try messy queries:</p>
-                    <button onclick="askExample('wat is teh captial of Frace?')">wat is teh captial of Frace?</button>
-                    <button onclick="askExample('wut is the bigest planit?')">wut is the bigest planit?</button>
-                    <button onclick="askExample('wher is mount everst?')">wher is mount everst?</button>
+            </div>
+            
+            <div class="analysis-card">
+                <h3>📊 Query Stats</h3>
+                <div class="stats-grid" id="statsGrid">
+                    <div class="stat">
+                        <div class="value" id="statTokens">-</div>
+                        <div class="label">Tokens</div>
+                    </div>
+                    <div class="stat">
+                        <div class="value" id="statCorrections">-</div>
+                        <div class="label">Corrections</div>
+                    </div>
+                    <div class="stat">
+                        <div class="value" id="statAnchors">-</div>
+                        <div class="label">Anchors</div>
+                    </div>
+                    <div class="stat">
+                        <div class="value" id="statCandidates">-</div>
+                        <div class="label">Candidates</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="analysis-card">
+                <h3>🎯 Anchors Extracted</h3>
+                <div id="anchorsList" style="font-family: monospace; font-size: 0.8rem; color: var(--accent);">
+                    -
+                </div>
+            </div>
+            
+            <div class="analysis-card">
+                <h3>ℹ️ Mode Info</h3>
+                <div id="modeInfo" style="font-size: 0.75rem; color: var(--text-secondary);">
+                    <strong>Local Mode:</strong> Uses 788 curated facts.<br><br>
+                    <strong>Wikipedia Mode:</strong> Searches Wikipedia API when local corpus doesn't have the answer.
                 </div>
             </div>
         </div>
     </div>
     
-    <div class="input-area">
-        <div class="input-wrapper">
-            <input 
-                type="text" 
-                id="input" 
-                placeholder="Ask anything... typos welcome!" 
-                disabled
-                onkeypress="if(event.key === 'Enter') ask()"
-            >
-            <button id="sendBtn" onclick="ask()" disabled>Ask</button>
-        </div>
-    </div>
-    
-    <div class="status-bar" id="status">
-        Loading imagineAI data...
-    </div>
+    <div class="status-bar" id="status">Loading...</div>
 
-    <script>
-    // =========================================================================
-    // imagineAI v1.1 Client-Side Solver
-    // Query Understanding + ITT Resolution
-    // =========================================================================
+<script>
+// =========================================================================
+// imagineAI v1.1 - Real Dictionary + Wikipedia Integration
+// =========================================================================
+
+let DATA = null;
+let ENGLISH_DICT = null;  // Real English dictionary
+let CORPUS_VOCAB = null;  // Words from our facts corpus
+let MODE = 'local';       // 'local' or 'wiki'
+
+// =========================================================================
+// ALIASES - Common text shortcuts
+// =========================================================================
+const ALIASES = {
+    'u': 'you', 'r': 'are', 'ur': 'your', 'teh': 'the', 'thier': 'their',
+    'wut': 'what', 'wat': 'what', 'whats': 'what', 'wher': 'where',
+    'wen': 'when', 'wich': 'which', 'hav': 'have', 'dont': "don't",
+    'cant': "can't", 'wont': "won't", 'captial': 'capital', 'capitol': 'capital',
+    'bigest': 'biggest', 'longst': 'longest', 'deepst': 'deepest',
+    'tallst': 'tallest', 'planit': 'planet', 'mountan': 'mountain'
+};
+
+// POS patterns for basic classification
+const POS_PATTERNS = {
+    WH: ['what', 'which', 'who', 'where', 'when', 'why', 'how'],
+    DET: ['the', 'a', 'an', 'this', 'that', 'these', 'those', 'my', 'your', 'his', 'her', 'its', 'our', 'their'],
+    PREP: ['of', 'in', 'on', 'at', 'by', 'for', 'with', 'from', 'to', 'into', 'through', 'about', 'between'],
+    PRON: ['i', 'you', 'he', 'she', 'it', 'we', 'they', 'me', 'him', 'her', 'us', 'them'],
+    AUX: ['is', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 'do', 'does', 'did', 'can', 'could', 'will', 'would', 'should', 'may', 'might', 'must'],
+    CONJ: ['and', 'or', 'but', 'nor', 'so', 'yet'],
+};
+
+const STOP_WORDS = new Set([
+    ...POS_PATTERNS.DET, ...POS_PATTERNS.PREP, ...POS_PATTERNS.PRON,
+    ...POS_PATTERNS.AUX, ...POS_PATTERNS.CONJ, 'many', 'much', 'some', 'any'
+]);
+
+const SUPERLATIVE_SYNONYMS = {
+    'biggest': ['largest', 'biggest'], 'largest': ['biggest', 'largest'],
+    'tallest': ['tallest', 'highest'], 'highest': ['tallest', 'highest'],
+    'longest': ['longest'], 'deepest': ['deepest'],
+    'fastest': ['fastest', 'quickest'], 'hottest': ['hottest', 'warmest']
+};
+
+// =========================================================================
+// LEVENSHTEIN DISTANCE
+// =========================================================================
+function levenshtein(s, t) {
+    if (!s) return t ? t.length : 0;
+    if (!t) return s.length;
+    const m = s.length, n = t.length;
+    let prev = Array.from({length: n + 1}, (_, i) => i);
+    let curr = new Array(n + 1).fill(0);
+    for (let i = 1; i <= m; i++) {
+        curr[0] = i;
+        for (let j = 1; j <= n; j++) {
+            curr[j] = Math.min(prev[j] + 1, curr[j-1] + 1, prev[j-1] + (s[i-1] === t[j-1] ? 0 : 1));
+        }
+        [prev, curr] = [curr, prev];
+    }
+    return prev[n];
+}
+
+// =========================================================================
+// SPELLING CORRECTION - Uses REAL English dictionary, NOT corpus
+// =========================================================================
+function correctSpelling(word) {
+    // Exact match in English dictionary
+    if (ENGLISH_DICT.has(word)) {
+        return { word, status: 'exact', distance: 0 };
+    }
     
-    let DATA = null;
-    let VOCABULARY = null;
+    // Find closest in English dictionary
+    let bestWord = word;
+    let bestDist = 3;  // Max distance threshold
+    let bestLen = 0;
     
-    // =========================================================================
-    // QUERY UNDERSTANDING MODULE
-    // =========================================================================
+    for (const dictWord of ENGLISH_DICT) {
+        if (Math.abs(word.length - dictWord.length) > 2) continue;
+        const dist = levenshtein(word, dictWord);
+        if (dist < bestDist || (dist === bestDist && dictWord.length > bestLen)) {
+            bestDist = dist;
+            bestWord = dictWord;
+            bestLen = dictWord.length;
+        }
+    }
     
-    // Common aliases / text shortcuts
-    const ALIASES = {
-        'u': 'you', 'r': 'are', 'ur': 'your',
-        'teh': 'the', 'thier': 'their',
-        'wut': 'what', 'wat': 'what', 'whos': 'whose',
-        'whats': 'what', 'dont': "don't", 'cant': "can't",
-        'wont': "won't", 'didnt': "didn't", 'doesnt': "doesn't",
-        'isnt': "isn't", 'arent': "aren't", 'wasnt': "wasn't",
-        'werent': "weren't", 'hasnt': "hasn't", 'havent': "haven't",
-        'captial': 'capital', 'capitl': 'capital', 'capitol': 'capital',
-        'wher': 'where', 'wen': 'when', 'wich': 'which',
-        'hav': 'have', 'wud': 'would', 'cud': 'could', 'shud': 'should',
-        'bigest': 'biggest', 'longst': 'longest', 'deepst': 'deepest',
-        'tallst': 'tallest', 'fastst': 'fastest', 'hotst': 'hottest',
-        'planit': 'planet', 'plannet': 'planet',
-        'rivr': 'river', 'mountan': 'mountain', 'mountin': 'mountain',
-        'contry': 'country', 'counrty': 'country'
+    if (bestDist <= 2 && bestWord !== word) {
+        return { word: bestWord, status: 'corrected', distance: bestDist };
+    }
+    
+    // Unknown word - keep as is
+    return { word, status: 'unknown', distance: 0 };
+}
+
+// =========================================================================
+// GET POS TAG
+// =========================================================================
+function getPOS(word) {
+    for (const [pos, words] of Object.entries(POS_PATTERNS)) {
+        if (words.includes(word)) return pos;
+    }
+    // Heuristics
+    if (word.endsWith('ly')) return 'ADV';
+    if (word.endsWith('ing') || word.endsWith('ed')) return 'VERB';
+    if (word.endsWith('est') || word.endsWith('er')) return 'ADJ';
+    return 'NOUN';  // Default
+}
+
+// =========================================================================
+// QUERY UNDERSTANDING
+// =========================================================================
+function understandQuery(text) {
+    const rawTokens = text.toLowerCase().match(/[a-z]+/g) || [];
+    const tokens = [];
+    const corrections = [];
+    
+    for (const raw of rawTokens) {
+        // Step 1: Check aliases first
+        if (ALIASES[raw]) {
+            tokens.push({
+                original: raw,
+                resolved: ALIASES[raw],
+                status: 'alias',
+                pos: getPOS(ALIASES[raw])
+            });
+            corrections.push({ from: raw, to: ALIASES[raw], type: 'alias' });
+            continue;
+        }
+        
+        // Step 2: Spelling correction using REAL dictionary
+        const corrected = correctSpelling(raw);
+        const pos = getPOS(corrected.word);
+        
+        tokens.push({
+            original: raw,
+            resolved: corrected.word,
+            status: corrected.status,
+            pos: pos
+        });
+        
+        if (corrected.status === 'corrected') {
+            corrections.push({ from: raw, to: corrected.word, type: 'spelling' });
+        }
+    }
+    
+    // Extract anchors (content words)
+    const anchors = tokens
+        .filter(t => !STOP_WORDS.has(t.resolved) && t.resolved.length > 2)
+        .map(t => t.resolved);
+    
+    return {
+        tokens,
+        corrections,
+        anchors,
+        resolvedText: tokens.map(t => t.resolved).join(' ')
     };
+}
+
+// =========================================================================
+// LOCAL CORPUS SOLVER
+// =========================================================================
+function solveLocal(query) {
+    const understanding = understandQuery(query);
+    const { tokens, anchors } = understanding;
     
-    // Superlative synonyms
-    const SUPERLATIVE_SYNONYMS = {
-        'biggest': ['largest', 'biggest'],
-        'largest': ['biggest', 'largest'],
-        'smallest': ['smallest', 'tiniest'],
-        'tallest': ['tallest', 'highest'],
-        'highest': ['tallest', 'highest'],
-        'longest': ['longest'],
-        'deepest': ['deepest'],
-        'fastest': ['fastest', 'quickest'],
-        'hottest': ['hottest', 'warmest'],
-        'coldest': ['coldest', 'coolest']
-    };
-    
-    const STOP_WORDS = new Set([
-        'the', 'a', 'an', 'is', 'are', 'was', 'were', 'be', 'been', 'being',
-        'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could',
-        'should', 'may', 'might', 'must', 'shall', 'can', 'need',
-        'to', 'of', 'in', 'for', 'on', 'with', 'at', 'by', 'from', 'as',
-        'this', 'that', 'these', 'those', 'am', 'i', 'me', 'my',
-        'we', 'our', 'you', 'your', 'he', 'him', 'his', 'she', 'her',
-        'it', 'its', 'they', 'them', 'their', 'many', 'much', 'any'
-    ]);
-    
-    const SUPERLATIVES = new Set([
-        'tallest', 'largest', 'biggest', 'longest', 'deepest',
-        'smallest', 'shortest', 'fastest', 'slowest', 'highest',
-        'hottest', 'coldest', 'oldest', 'newest', 'most', 'least'
-    ]);
-    
-    // =========================================================================
-    // LEVENSHTEIN DISTANCE (Tension Function)
-    // =========================================================================
-    
-    function levenshteinDistance(s, t) {
-        if (!s) return t ? t.length : 0;
-        if (!t) return s.length;
-        
-        const m = s.length, n = t.length;
-        let prev = Array.from({length: n + 1}, (_, i) => i);
-        let curr = new Array(n + 1).fill(0);
-        
-        for (let i = 1; i <= m; i++) {
-            curr[0] = i;
-            for (let j = 1; j <= n; j++) {
-                const cost = s[i-1] === t[j-1] ? 0 : 1;
-                curr[j] = Math.min(prev[j] + 1, curr[j-1] + 1, prev[j-1] + cost);
-            }
-            [prev, curr] = [curr, prev];
-        }
-        return prev[n];
+    if (anchors.length === 0) {
+        return { ...understanding, answer: null, source: 'none', candidates: 0 };
     }
     
-    // =========================================================================
-    // SPELLING CORRECTION
-    // =========================================================================
-    
-    function correctSpelling(word, maxDistance = 2) {
-        if (VOCABULARY.has(word)) {
-            return { word: word, distance: 0, status: 'exact' };
+    // Get candidates from inverted index
+    const candidateScores = {};
+    for (const anchor of anchors) {
+        const indices = DATA.inverted_index[anchor] || [];
+        for (const idx of indices) {
+            candidateScores[idx] = (candidateScores[idx] || 0) + 1;
         }
-        
-        let bestWord = word;
-        let bestDistance = maxDistance + 1;
-        let bestLen = 0;
-        
-        for (const vocabWord of VOCABULARY) {
-            if (Math.abs(word.length - vocabWord.length) > maxDistance) continue;
-            
-            const dist = levenshteinDistance(word, vocabWord);
-            if (dist < bestDistance || (dist === bestDistance && vocabWord.length > bestLen)) {
-                bestDistance = dist;
-                bestWord = vocabWord;
-                bestLen = vocabWord.length;
+        // Stemmed
+        const stem = anchor.replace(/s$/, '');
+        if (stem !== anchor) {
+            const stemIndices = DATA.inverted_index[stem] || [];
+            for (const idx of stemIndices) {
+                candidateScores[idx] = (candidateScores[idx] || 0) + 0.5;
             }
         }
-        
-        if (bestDistance <= maxDistance) {
-            return { word: bestWord, distance: bestDistance, status: 'corrected' };
-        }
-        return { word: word, distance: 0, status: 'unknown' };
-    }
-    
-    // =========================================================================
-    // QUERY UNDERSTANDING PIPELINE
-    // =========================================================================
-    
-    function resolveQuery(text) {
-        const tokens = text.toLowerCase().match(/[a-z]+(?:'[a-z]+)?/g) || [];
-        const resolved = [];
-        const corrections = [];
-        
-        for (const token of tokens) {
-            // Step 1: Check aliases first
-            if (ALIASES[token]) {
-                resolved.push(ALIASES[token]);
-                corrections.push({ original: token, resolved: ALIASES[token], status: 'alias' });
-                continue;
-            }
-            
-            // Step 2: Spelling correction
-            const corrected = correctSpelling(token);
-            resolved.push(corrected.word);
-            
-            if (corrected.status === 'corrected') {
-                corrections.push({ 
-                    original: token, 
-                    resolved: corrected.word, 
-                    status: 'corrected' 
-                });
-            }
-        }
-        
-        return {
-            original: text,
-            resolved: resolved.join(' '),
-            tokens: resolved,
-            corrections: corrections
-        };
-    }
-    
-    function extractAnchors(tokens) {
-        return tokens.filter(w => !STOP_WORDS.has(w) && w.length > 2);
-    }
-    
-    function detectQuestionType(tokens, text) {
-        const textLower = text.toLowerCase();
-        return {
-            isQuestion: tokens.includes('what') || tokens.includes('who') || 
-                       tokens.includes('where') || tokens.includes('how') ||
-                       tokens.includes('which') || tokens.includes('when'),
-            asksLocation: tokens.includes('where') || textLower.includes('located'),
-            asksSuperlative: tokens.some(t => SUPERLATIVES.has(t)),
-            asksCount: tokens.includes('how') && tokens.includes('many'),
-            superlatives: tokens.filter(t => SUPERLATIVES.has(t))
-        };
-    }
-    
-    // =========================================================================
-    // Vector Math
-    // =========================================================================
-    
-    function dot(a, b) {
-        let sum = 0;
-        for (let i = 0; i < a.length; i++) sum += a[i] * b[i];
-        return sum;
-    }
-    
-    function norm(v) {
-        return Math.sqrt(dot(v, v));
-    }
-    
-    function cosineSim(a, b) {
-        const na = norm(a), nb = norm(b);
-        if (na === 0 || nb === 0) return 0;
-        return dot(a, b) / (na * nb);
-    }
-    
-    function meanVector(vectors) {
-        if (vectors.length === 0) return new Array(DATA.dim).fill(0);
-        const result = new Array(DATA.dim).fill(0);
-        for (const v of vectors) {
-            for (let i = 0; i < DATA.dim; i++) result[i] += v[i];
-        }
-        for (let i = 0; i < DATA.dim; i++) result[i] /= vectors.length;
-        return result;
-    }
-    
-    function stem(word) {
-        if (word.endsWith('s') && word.length > 3) return word.slice(0, -1);
-        return word;
-    }
-    
-    // =========================================================================
-    // THE SOLVER - v1.1 with Query Understanding
-    // =========================================================================
-    
-    function solve(question) {
-        // Step 1: Query Understanding
-        const queryResult = resolveQuery(question);
-        const tokens = queryResult.tokens;
-        const corrections = queryResult.corrections;
-        
-        // Step 2: Extract anchors from resolved tokens
-        const anchors = extractAnchors(tokens);
-        
-        if (anchors.length === 0) {
-            return { 
-                answer: null, 
-                confidence: 0, 
-                trace: 'No anchors extracted',
-                corrections: corrections,
-                resolvedQuery: queryResult.resolved
-            };
-        }
-        
-        // Step 3: Question type detection
-        const questionType = detectQuestionType(tokens, queryResult.resolved);
-        
-        // Step 4: Get candidates via inverted index (with synonym expansion)
-        const candidateScores = {};
-        for (const anchor of anchors) {
-            // Direct lookup
-            const indices = DATA.inverted_index[anchor] || [];
-            for (const idx of indices) {
-                candidateScores[idx] = (candidateScores[idx] || 0) + 1;
-            }
-            
-            // Stemmed lookup
-            const stemmed = stem(anchor);
-            if (stemmed !== anchor) {
-                const stemIndices = DATA.inverted_index[stemmed] || [];
-                for (const idx of stemIndices) {
-                    candidateScores[idx] = (candidateScores[idx] || 0) + 0.5;
+        // Superlative synonyms
+        if (SUPERLATIVE_SYNONYMS[anchor]) {
+            for (const syn of SUPERLATIVE_SYNONYMS[anchor]) {
+                const synIndices = DATA.inverted_index[syn] || [];
+                for (const idx of synIndices) {
+                    candidateScores[idx] = (candidateScores[idx] || 0) + 0.8;
                 }
             }
-            
-            // Superlative synonym expansion
+        }
+    }
+    
+    let candidates = Object.entries(candidateScores)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 50)
+        .map(([idx]) => parseInt(idx));
+    
+    if (candidates.length === 0) {
+        return { ...understanding, answer: null, source: 'local', candidates: 0 };
+    }
+    
+    // Score candidates
+    const functionWords = new Set(['in', 'of', 'on', 'at', 'by', 'for', 'with', 'from', 'to']);
+    const contentAnchors = anchors.filter(a => !functionWords.has(a));
+    const asksLocation = tokens.some(t => t.resolved === 'where');
+    const asksSuperlative = tokens.some(t => t.pos === 'ADJ' && t.resolved.endsWith('est'));
+    
+    let bestFact = null;
+    let bestScore = 0;
+    
+    for (const idx of candidates) {
+        const fact = DATA.facts[idx];
+        const factLower = fact.toLowerCase();
+        const factWords = new Set(factLower.match(/\b[a-z]+\b/g) || []);
+        
+        let matches = 0;
+        for (const anchor of contentAnchors) {
+            if (factWords.has(anchor)) { matches++; continue; }
+            const stem = anchor.replace(/s$/, '');
+            if (factWords.has(stem)) { matches += 0.8; continue; }
             if (SUPERLATIVE_SYNONYMS[anchor]) {
                 for (const syn of SUPERLATIVE_SYNONYMS[anchor]) {
-                    const synIndices = DATA.inverted_index[syn] || [];
-                    for (const idx of synIndices) {
-                        candidateScores[idx] = (candidateScores[idx] || 0) + 0.8;
-                    }
+                    if (factWords.has(syn)) { matches++; break; }
                 }
             }
         }
         
-        let candidates = Object.entries(candidateScores)
-            .sort((a, b) => b[1] - a[1])
-            .slice(0, 100)
-            .map(([idx]) => parseInt(idx));
+        if (contentAnchors.length === 0) continue;
+        let score = matches / contentAnchors.length;
+        if (matches >= contentAnchors.length) score *= 1.2;
         
-        if (candidates.length === 0) {
-            return { 
-                answer: null, 
-                confidence: 0, 
-                trace: 'No candidates found',
-                corrections: corrections,
-                resolvedQuery: queryResult.resolved
-            };
+        // Location boost
+        if (asksLocation && (factLower.includes('located') || factLower.includes('in the'))) {
+            score *= 2.0;
         }
         
-        // Step 5: Score each candidate
-        let bestFact = null;
-        let bestScore = 0;
-        const functionWords = new Set(['in', 'of', 'on', 'at', 'by', 'for', 'with', 'from', 'to']);
-        const contentAnchors = anchors.filter(a => !functionWords.has(a));
-        
-        for (const idx of candidates) {
-            const fact = DATA.facts[idx];
-            const factLower = fact.toLowerCase();
-            const factWords = new Set(factLower.match(/\b[a-z]+\b/g) || []);
-            
-            // Anchor match score with synonym expansion
-            let matches = 0;
-            for (const anchor of contentAnchors) {
-                if (factWords.has(anchor)) {
-                    matches++;
-                    continue;
-                }
-                const stemmed = stem(anchor);
-                if (factWords.has(stemmed)) {
-                    matches += 0.8;
-                    continue;
-                }
-                // Check superlative synonyms
-                if (SUPERLATIVE_SYNONYMS[anchor]) {
-                    for (const syn of SUPERLATIVE_SYNONYMS[anchor]) {
-                        if (factWords.has(syn)) {
-                            matches++;
-                            break;
-                        }
-                    }
-                }
+        // Ordinal penalty
+        if (asksSuperlative) {
+            for (const ord of ['second', 'third', 'fourth', 'fifth']) {
+                if (factWords.has(ord)) { score *= 0.3; break; }
             }
-            
-            if (contentAnchors.length === 0) continue;
-            let anchorScore = matches / contentAnchors.length;
-            if (matches >= contentAnchors.length) anchorScore *= 1.2;
-            
-            // Superlative factor
-            let superlativeFactor = 1.0;
-            if (questionType.asksSuperlative) {
-                const querySupSynonyms = new Set();
-                for (const sup of questionType.superlatives) {
-                    if (SUPERLATIVE_SYNONYMS[sup]) {
-                        SUPERLATIVE_SYNONYMS[sup].forEach(s => querySupSynonyms.add(s));
-                    } else {
-                        querySupSynonyms.add(sup);
-                    }
-                }
-                
-                for (const syn of querySupSynonyms) {
-                    if (factWords.has(syn)) {
-                        superlativeFactor = 1.5;
-                        break;
-                    }
-                }
-                
-                // Penalize ordinals
-                for (const ordinal of ['second', 'third', 'fourth', 'fifth']) {
-                    if (factWords.has(ordinal)) {
-                        superlativeFactor = 0.3;
-                        break;
-                    }
-                }
-            }
-            
-            // Location factor
-            let locationFactor = 1.0;
-            if (questionType.asksLocation) {
-                if (factLower.includes('located') || factLower.includes('in the')) {
-                    locationFactor = 2.0;
-                } else {
-                    locationFactor = 0.5;
-                }
-            }
-            
-            // Scope factor (prefer global facts for unqualified superlatives)
-            let scopeFactor = 1.0;
-            if (questionType.asksSuperlative) {
-                const hasRegionalQualifier = ['africa', 'europe', 'asia', 'america', 'australia', 'japan', 'china']
-                    .some(r => queryResult.resolved.includes(r));
-                
-                if (!hasRegionalQualifier) {
-                    if (factLower.includes('on earth') || factLower.includes('in the world')) {
-                        scopeFactor = 1.3;
-                    } else if (['africa', 'europe', 'asia', 'america', 'australia', 'japan', 'base to peak', 'north america', 'south america']
-                        .some(r => factLower.includes(r))) {
-                        scopeFactor = 0.6;
-                    }
-                }
-            }
-            
-            // Regional penalty
-            let regionalPenalty = 1.0;
-            if (!questionType.asksLocation) {
-                const regions = ['africa', 'europe', 'asia', 'america', 'australia'];
-                for (const region of regions) {
-                    if (factLower.includes(region) && !contentAnchors.includes(region)) {
-                        regionalPenalty = 0.7;
-                        break;
-                    }
-                }
-            }
-            
-            // Combined score
-            const score = anchorScore * superlativeFactor * locationFactor * scopeFactor * regionalPenalty;
-            
-            if (score > bestScore) {
-                bestScore = score;
-                bestFact = fact;
+            // Global scope preference
+            if (factLower.includes('on earth') || factLower.includes('in the world')) {
+                score *= 1.3;
             }
         }
         
-        // Selection Number approximation
-        const avgConfidence = corrections.length > 0 ? 0.8 : 1.0;
-        const lossRate = 0.1 * (1 - avgConfidence);
-        const S = bestScore / Math.max(lossRate, 0.01);
+        if (score > bestScore) {
+            bestScore = score;
+            bestFact = fact;
+        }
+    }
+    
+    return {
+        ...understanding,
+        answer: bestFact,
+        score: bestScore,
+        source: bestFact ? 'local' : 'none',
+        candidates: candidates.length
+    };
+}
+
+// =========================================================================
+// WIKIPEDIA SEARCH (when local fails)
+// =========================================================================
+async function searchWikipedia(query) {
+    const understanding = understandQuery(query);
+    const searchTerm = understanding.anchors.join(' ');
+    
+    if (!searchTerm) {
+        return { ...understanding, answer: null, source: 'none', candidates: 0 };
+    }
+    
+    try {
+        // Wikipedia API search
+        const searchUrl = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(searchTerm)}&format=json&origin=*&srlimit=3`;
+        const searchRes = await fetch(searchUrl);
+        const searchData = await searchRes.json();
+        
+        if (!searchData.query?.search?.length) {
+            return { ...understanding, answer: "No Wikipedia results found.", source: 'wikipedia', candidates: 0 };
+        }
+        
+        // Get the first result's extract
+        const pageTitle = searchData.query.search[0].title;
+        const extractUrl = `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(pageTitle)}&prop=extracts&exintro&explaintext&format=json&origin=*`;
+        const extractRes = await fetch(extractUrl);
+        const extractData = await extractRes.json();
+        
+        const pages = extractData.query.pages;
+        const pageId = Object.keys(pages)[0];
+        let extract = pages[pageId].extract || '';
+        
+        // Trim to first 2-3 sentences
+        const sentences = extract.match(/[^.!?]+[.!?]+/g) || [];
+        const answer = sentences.slice(0, 2).join(' ').trim();
         
         return {
-            answer: bestFact || "I don't know the answer to that question.",
-            confidence: bestScore,
-            selectionNumber: S,
-            anchors: anchors,
-            candidatesChecked: candidates.length,
-            corrections: corrections,
-            resolvedQuery: queryResult.resolved,
-            trace: `Anchors: ${anchors.join(', ')} • Candidates: ${candidates.length}`
+            ...understanding,
+            answer: answer || "Found page but couldn't extract content.",
+            source: 'wikipedia',
+            wikiTitle: pageTitle,
+            candidates: searchData.query.search.length
+        };
+    } catch (error) {
+        console.error('Wikipedia error:', error);
+        return {
+            ...understanding,
+            answer: "Wikipedia search failed.",
+            source: 'error',
+            candidates: 0
         };
     }
+}
+
+// =========================================================================
+// MAIN SOLVE FUNCTION
+// =========================================================================
+async function solve(query) {
+    // First try local
+    const localResult = solveLocal(query);
     
-    // =========================================================================
-    // UI Functions
-    // =========================================================================
+    // If local found answer or wiki mode is off, return local
+    if (localResult.answer || MODE === 'local') {
+        return localResult;
+    }
     
-    function addMessage(content, type, meta = null, corrections = null) {
-        const welcome = document.getElementById('welcome');
-        if (welcome) welcome.remove();
+    // Try Wikipedia
+    return await searchWikipedia(query);
+}
+
+// =========================================================================
+// UI FUNCTIONS
+// =========================================================================
+function updateAnalysisPanel(result) {
+    // Token grid
+    const tokenGrid = document.getElementById('tokenGrid');
+    tokenGrid.innerHTML = result.tokens.map(t => {
+        let cls = t.status === 'corrected' ? 'corrected' : 
+                  t.status === 'unknown' ? 'unknown' : 'exact';
+        let correction = t.original !== t.resolved ? 
+            `<div class="correction">${t.original} → ${t.resolved}</div>` : '';
+        return `<div class="token ${cls}">
+            <div class="word">${t.resolved}</div>
+            <div class="pos">${t.pos}</div>
+            ${correction}
+        </div>`;
+    }).join('');
+    
+    // Stats
+    document.getElementById('statTokens').textContent = result.tokens.length;
+    document.getElementById('statCorrections').textContent = result.corrections.length;
+    document.getElementById('statAnchors').textContent = result.anchors.length;
+    document.getElementById('statCandidates').textContent = result.candidates || 0;
+    
+    // Anchors
+    document.getElementById('anchorsList').textContent = 
+        result.anchors.length > 0 ? result.anchors.join(', ') : '(none)';
+}
+
+function addMessage(content, type, result = null) {
+    const welcome = document.getElementById('welcome');
+    if (welcome) welcome.remove();
+    
+    const messages = document.getElementById('messages');
+    const div = document.createElement('div');
+    div.className = `message ${type}`;
+    
+    if (type === 'assistant' && result) {
+        const sourceClass = result.source === 'local' ? 'local' : 
+                           result.source === 'wikipedia' ? 'wikipedia' : 'unknown';
+        const sourceLabel = result.source === 'local' ? '📚 Local Corpus' :
+                           result.source === 'wikipedia' ? '🌐 Wikipedia' : '❓ Unknown';
         
-        const messages = document.getElementById('messages');
-        const div = document.createElement('div');
-        div.className = `message ${type}`;
+        let html = `<span class="source-badge ${sourceClass}">${sourceLabel}</span>`;
+        html += `<div class="answer">${content}</div>`;
         
-        if (type === 'assistant') {
-            let html = '';
-            
-            // Show corrections if any
-            if (corrections && corrections.length > 0) {
-                html += '<div class="corrections">';
-                html += '<div class="label">✨ Query Understanding</div>';
-                for (const c of corrections) {
-                    html += `<span class="correction-item">`;
-                    html += `<span class="old">${c.original}</span>`;
-                    html += `<span class="arrow">→</span>`;
-                    html += `<span class="new">${c.resolved}</span>`;
-                    html += '</span>';
-                }
-                html += '</div>';
-            }
-            
-            html += `<div class="answer-text">${content}</div>`;
-            if (meta) {
-                html += `<div class="meta">${meta}</div>`;
-            }
-            div.innerHTML = html;
-        } else {
-            div.textContent = content;
+        if (result.corrections && result.corrections.length > 0) {
+            html += '<div style="margin: 0.5rem 0; padding: 0.3rem 0.5rem; background: rgba(245,158,11,0.1); border-radius: 4px; font-size: 0.75rem;">';
+            html += '✨ Corrections: ';
+            html += result.corrections.map(c => `<s>${c.from}</s>→${c.to}`).join(', ');
+            html += '</div>';
         }
         
-        messages.appendChild(div);
-        messages.scrollTop = messages.scrollHeight;
+        html += `<div class="meta">S = ${(result.score || 0).toFixed(2)} • Anchors: ${result.anchors.join(', ')} • Candidates: ${result.candidates || 0}</div>`;
+        div.innerHTML = html;
+        
+        updateAnalysisPanel(result);
+    } else {
+        div.textContent = content;
     }
     
-    function ask() {
-        const input = document.getElementById('input');
-        const question = input.value.trim();
-        if (!question) return;
-        
-        addMessage(question, 'user');
-        input.value = '';
-        
-        // Solve using v1.1 engine
-        const result = solve(question);
-        
-        const meta = result.answer ? 
-            `S = ${result.selectionNumber?.toFixed(2) || '0.00'} • ${result.trace}` : 
-            'No answer found';
-        
-        addMessage(result.answer || "I couldn't find an answer.", 'assistant', meta, result.corrections);
+    messages.appendChild(div);
+    messages.scrollTop = messages.scrollHeight;
+}
+
+async function ask() {
+    const input = document.getElementById('input');
+    const question = input.value.trim();
+    if (!question) return;
+    
+    addMessage(question, 'user');
+    input.value = '';
+    
+    // Show loading
+    const loadingDiv = document.createElement('div');
+    loadingDiv.className = 'loading';
+    loadingDiv.innerHTML = '<div class="spinner"></div> Thinking...';
+    document.getElementById('messages').appendChild(loadingDiv);
+    
+    const result = await solve(question);
+    loadingDiv.remove();
+    
+    addMessage(result.answer || "I couldn't find an answer.", 'assistant', result);
+}
+
+function askExample(q) {
+    document.getElementById('input').value = q;
+    ask();
+}
+
+function setMode(mode) {
+    MODE = mode;
+    document.getElementById('modeLocal').classList.toggle('active', mode === 'local');
+    document.getElementById('modeWiki').classList.toggle('active', mode === 'wiki');
+    
+    const info = document.getElementById('modeInfo');
+    if (mode === 'local') {
+        info.innerHTML = '<strong>Local Mode:</strong> Uses 788 curated facts only.<br><br>Spelling correction uses real English dictionary (not corpus-biased).';
+    } else {
+        info.innerHTML = '<strong>Wikipedia Mode:</strong> First checks local corpus, then searches Wikipedia API if no local answer.<br><br>Unlimited knowledge access!';
     }
+}
+
+// =========================================================================
+// INIT
+// =========================================================================
+async function init() {
+    const status = document.getElementById('status');
     
-    function askExample(question) {
-        document.getElementById('input').value = question;
-        ask();
-    }
-    
-    // =========================================================================
-    // Initialization
-    // =========================================================================
-    
-    async function init() {
-        const status = document.getElementById('status');
+    try {
+        status.textContent = 'Loading data...';
+        const response = await fetch('imagine_ai_data.json');
+        DATA = await response.json();
         
-        try {
-            status.textContent = 'Loading imagineAI v1.1 data...';
-            const response = await fetch('imagine_ai_data.json');
-            DATA = await response.json();
-            
-            // Build vocabulary from facts
-            VOCABULARY = new Set();
-            for (const fact of DATA.facts) {
-                const words = fact.toLowerCase().match(/\b[a-z]+\b/g) || [];
-                words.forEach(w => VOCABULARY.add(w));
-            }
-            // Add static dictionary words
-            Object.keys(ALIASES).forEach(k => VOCABULARY.add(k));
-            Object.values(ALIASES).forEach(v => VOCABULARY.add(v));
-            
-            status.innerHTML = `<span class="ready">●</span> Ready • ${DATA.facts.length} facts • v1.1 Semantic Understanding`;
-            
-            document.getElementById('input').disabled = false;
-            document.getElementById('sendBtn').disabled = false;
-            document.getElementById('input').focus();
-            
-        } catch (error) {
-            status.textContent = `Error: ${error.message}`;
-            console.error(error);
+        // Build English dictionary set
+        ENGLISH_DICT = new Set(DATA.english_dictionary || []);
+        
+        // Build corpus vocabulary (for reference, not spelling)
+        CORPUS_VOCAB = new Set();
+        for (const fact of DATA.facts) {
+            const words = fact.toLowerCase().match(/\b[a-z]+\b/g) || [];
+            words.forEach(w => CORPUS_VOCAB.add(w));
         }
+        
+        // Add common words to English dict
+        Object.values(ALIASES).forEach(w => ENGLISH_DICT.add(w));
+        
+        status.innerHTML = `<span class="ready">●</span> Ready • ${DATA.facts.length} facts • ${ENGLISH_DICT.size} dictionary words`;
+        
+        document.getElementById('input').disabled = false;
+        document.getElementById('sendBtn').disabled = false;
+        document.getElementById('input').focus();
+        
+    } catch (error) {
+        status.textContent = `Error: ${error.message}`;
+        console.error(error);
     }
-    
-    init();
-    </script>
+}
+
+init();
+</script>
 </body>
 </html>
