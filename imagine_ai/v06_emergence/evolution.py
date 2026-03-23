@@ -228,6 +228,12 @@ def find_answer_in_substrate(
     
     This is the writability gate: only configurations
     that respect boundaries can be valid answers.
+    
+    v0.9 Enhancements (from ARC-AGI research):
+    - Disambiguation tensors for "the country", "state" qualifiers
+    - Noun-class boundary detection (lake vs ocean)
+    - Hedging word penalty (technically, considered)
+    - Improved ordinal context handling
     """
     if not facts or not fact_embeddings:
         return None, 0.0
@@ -236,15 +242,41 @@ def find_answer_in_substrate(
     question_lower = question.lower()
     question_words = set(re.findall(r'\b[a-z]+\b', question_lower))
     
+    # === v0.9: DISAMBIGUATION TENSORS ===
+    # These detect explicit qualifiers that resolve ambiguity
+    disambiguation_context = {
+        'requires_country': 'the country' in question_lower or 'country of' in question_lower,
+        'requires_state': 'state' in question_words and 'united' not in question_words,
+        'requires_lake': 'lake' in question_words,
+        'requires_ocean': 'ocean' in question_words,
+        'requires_sea': 'sea' in question_words,
+        'requires_river': 'river' in question_words,
+        'requires_desert': 'desert' in question_words,
+        'requires_mountain': 'mountain' in question_words or 'tallest' in question_words,
+    }
+    
     # Does question ask for an ordinal? (second tallest, third largest, etc.)
     question_asks_ordinal = any(ord in question_words for ord in ['second', 'third', 'fourth', 'fifth'])
     
-    # Ordinal qualifiers - indicate a non-primary answer (penalized)
-    # Note: "second" can be ordinal OR time unit - we check context below
+    # Which specific ordinal?
+    question_ordinal = None
+    for ord in ['second', 'third', 'fourth', 'fifth']:
+        if ord in question_words:
+            question_ordinal = ord
+            break
+    
+    # Does question ask for superlative? (most, largest, biggest, longest)
+    question_asks_superlative = any(sup in question_words for sup in ['most', 'largest', 'biggest', 'longest', 'deepest', 'tallest', 'fastest', 'highest'])
+    
+    # Ordinal qualifiers - indicate a non-primary answer (penalized unless asked for)
     ORDINAL_QUALIFIERS = {'third', 'fourth', 'fifth'}
     
     # Phrases that indicate partial/qualified answer  
     PARTIAL_PHRASES = {'one of', 'among', 'nearly', 'almost'}
+    
+    # === v0.9: HEDGING WORDS ===
+    # Words that indicate the fact is qualified/uncertain
+    HEDGING_WORDS = {'technically', 'considered', 'arguably', 'sometimes', 'often'}
     
     # Words that indicate specificity when anchor is general
     SPECIFICITY_QUALIFIERS = {'land', 'sea', 'marine', 'flying', 'bird'}
@@ -253,6 +285,16 @@ def find_answer_in_substrate(
     REGIONAL_QUALIFIERS = {'in africa', 'in asia', 'in europe', 'in north america', 
                            'in south america', 'in australia', 'in japan', 'in china',
                            'in america', 'in the world'}
+    
+    # === v0.9: NOUN-CLASS BOUNDARIES ===
+    # Facts that cross noun-class boundaries should be penalized
+    NOUN_CLASSES = {
+        'lake': {'lake'},
+        'ocean': {'ocean', 'sea', 'trench', 'mariana'},
+        'river': {'river', 'nile', 'amazon', 'mississippi'},
+        'desert': {'desert', 'sahara', 'gobi'},
+        'mountain': {'mountain', 'peak', 'everest', 'k2', 'mckinley'},
+    }
     
     # Score each fact
     scores = []
@@ -380,8 +422,67 @@ def find_answer_in_substrate(
                         regional_penalty *= 0.6
                         break  # Only apply once
         
-        # Combined score
-        combined = anchor_score * proximity_bonus * qualifier_penalty * specificity_penalty * regional_penalty + 0.05 * (semantic_sim + 1) / 2
+        # === v0.9: Component 7: Hedging word penalty ===
+        # Facts with hedging words are less definitive
+        hedging_penalty = 1.0
+        for hedge in HEDGING_WORDS:
+            if hedge in fact_words:
+                hedging_penalty *= 0.7
+        
+        # === v0.9: Component 8: Disambiguation tensor ===
+        # Apply strong penalties/boosts based on explicit question qualifiers
+        disambiguation_score = 1.0
+        
+        # "the country" / "country of" requires country-related facts
+        if disambiguation_context['requires_country']:
+            # Boost facts that mention "country" or are about countries
+            if 'country' in fact_words:
+                disambiguation_score *= 1.5
+            # Penalize facts about US states when asking about countries
+            us_state_indicators = {'alabama', 'alaska', 'arizona', 'arkansas', 'california',
+                                   'colorado', 'connecticut', 'delaware', 'florida', 'hawaii',
+                                   'idaho', 'illinois', 'indiana', 'iowa', 'kansas', 'kentucky',
+                                   'louisiana', 'maine', 'maryland', 'massachusetts', 'michigan',
+                                   'minnesota', 'mississippi', 'missouri', 'montana', 'nebraska',
+                                   'nevada', 'new hampshire', 'new jersey', 'new mexico', 'new york',
+                                   'north carolina', 'north dakota', 'ohio', 'oklahoma', 'oregon',
+                                   'pennsylvania', 'rhode island', 'south carolina', 'south dakota',
+                                   'tennessee', 'texas', 'utah', 'vermont', 'virginia', 'washington',
+                                   'west virginia', 'wisconsin', 'wyoming'}
+            # Check if fact is about a US state (has state name but not "country")
+            if any(state in fact_lower for state in us_state_indicators) and 'country' not in fact_words:
+                disambiguation_score *= 0.1  # Strong penalty
+        
+        # "state" without "united" requires US state facts
+        if disambiguation_context['requires_state']:
+            # Boost facts that mention state context
+            if 'state' in fact_lower:
+                disambiguation_score *= 1.3
+            # Penalize country capitals when asking about US states
+            if 'united states' in fact_lower or 'd.c.' in fact_lower:
+                disambiguation_score *= 0.3
+        
+        # === v0.9: Component 9: Noun-class boundary ===
+        # If question asks about specific noun class, penalize facts from other classes
+        noun_class_penalty = 1.0
+        for question_class, class_words in NOUN_CLASSES.items():
+            if disambiguation_context.get(f'requires_{question_class}', False):
+                # Question asks for this class - check if fact matches
+                fact_in_class = any(cw in fact_words for cw in class_words)
+                if not fact_in_class:
+                    # Fact is NOT in requested class
+                    # Check if it's in a DIFFERENT class
+                    for other_class, other_words in NOUN_CLASSES.items():
+                        if other_class != question_class:
+                            if any(ow in fact_words for ow in other_words):
+                                noun_class_penalty *= 0.2  # Strong penalty for wrong class
+                                break
+        
+        # Combined score (v0.9: added hedging, disambiguation, noun-class)
+        combined = (anchor_score * proximity_bonus * qualifier_penalty * 
+                   specificity_penalty * regional_penalty * hedging_penalty *
+                   disambiguation_score * noun_class_penalty + 
+                   0.05 * (semantic_sim + 1) / 2)
         
         scores.append((i, fact, combined, anchor_score, proximity_bonus))
     
