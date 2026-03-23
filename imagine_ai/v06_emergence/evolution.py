@@ -312,6 +312,20 @@ def find_answer_in_substrate(
         else:
             semantic_sim = 0.0
         
+        # === v1.0: Simple stemming for singular/plural ===
+        def stem(word):
+            """Simple stemmer for singular/plural."""
+            if word.endswith('s') and len(word) > 3:
+                return word[:-1]  # moons -> moon
+            return word
+        
+        # === v1.0: Superlative detection ===
+        SUPERLATIVES = {'tallest', 'largest', 'biggest', 'longest', 'deepest', 
+                       'smallest', 'shortest', 'fastest', 'slowest', 'highest',
+                       'hottest', 'coldest', 'oldest', 'newest', 'most', 'least'}
+        question_superlatives = question_words & SUPERLATIVES
+        fact_superlatives = fact_words & SUPERLATIVES
+        
         # Component 2: Anchor satisfaction (ρ_q constraint)
         anchor_score = 0.0
         anchor_positions = []  # Track where anchors appear
@@ -323,12 +337,15 @@ def find_answer_in_substrate(
                 best_pos = -1
                 is_direct = False
                 
-                # Direct match (whole word only)
-                # Check if anchor is a complete word in the fact
+                # v1.0: Try stemmed versions
+                anchor_stem = stem(anchor)
+                
+                # Direct match (whole word only) - including stemmed
                 for pos, word in enumerate(fact_words_list):
-                    # Strip punctuation for comparison
                     clean_word = word.strip('.,!?;:\'"()[]')
-                    if anchor == clean_word:
+                    clean_stem = stem(clean_word)
+                    # Match exact OR stemmed
+                    if anchor == clean_word or anchor_stem == clean_stem:
                         best_match = 1.0
                         best_pos = pos
                         is_direct = True
@@ -354,6 +371,18 @@ def find_answer_in_substrate(
             anchor_score = anchor_score / len(anchor_words) if anchor_words else 1.0
         else:
             anchor_score = 1.0
+        
+        # === v1.0: Superlative matching bonus/penalty ===
+        superlative_factor = 1.0
+        if question_superlatives:
+            # Question asks for a superlative
+            matching_superlatives = question_superlatives & fact_superlatives
+            if matching_superlatives:
+                # Fact has EXACTLY the superlative asked for - big boost
+                superlative_factor = 1.5
+            elif fact_superlatives:
+                # Fact has a DIFFERENT superlative - penalty
+                superlative_factor = 0.4
         
         # Component 3: Proximity bonus
         # If multiple anchors appear close together, give small boost
@@ -413,8 +442,11 @@ def find_answer_in_substrate(
         
         # Component 6: Regional penalty
         # If question doesn't mention a region but fact does, penalize
+        # v1.0 FIX: Don't penalize if question is ASKING about location
         regional_penalty = 1.0
-        if anchor_words:
+        question_asks_location = 'where' in question_words or 'located' in question_words or 'location' in question_words
+        
+        if anchor_words and not question_asks_location:
             question_has_region = any(region.split()[-1] in anchor_words for region in REGIONAL_QUALIFIERS)
             if not question_has_region:
                 for region in REGIONAL_QUALIFIERS:
@@ -432,6 +464,27 @@ def find_answer_in_substrate(
         # === v0.9: Component 8: Disambiguation tensor ===
         # Apply strong penalties/boosts based on explicit question qualifiers
         disambiguation_score = 1.0
+        
+        # === v1.0: Proper noun disambiguation ===
+        # Detect when an anchor word in the fact is part of a proper noun (e.g., "Port of Spain")
+        # If question asks "capital of Spain" but fact has "Port of Spain", penalize
+        # because "Spain" in the fact is part of a city name, not the country
+        for anchor in anchor_words:
+            # Check if "of <anchor>" appears in question (like "capital of Spain")
+            if f'of {anchor}' in question_lower:
+                # This anchor is likely a country/entity name the question is asking about
+                # Check if fact has "<word> of <anchor>" pattern (like "Port of Spain")
+                proper_noun_pattern = f' of {anchor}'
+                if proper_noun_pattern in fact_lower:
+                    # Check if there's a word before "of <anchor>" that makes it a proper noun
+                    parts = fact_lower.split(proper_noun_pattern)
+                    if len(parts) > 0 and parts[0].strip():
+                        last_word_before = parts[0].strip().split()[-1] if parts[0].strip().split() else ''
+                        # If the word before "of <anchor>" is capitalized in original, it's a proper noun
+                        # Common patterns: "Port of Spain", "Gulf of Mexico", "Bay of Bengal"
+                        proper_noun_indicators = {'port', 'gulf', 'bay', 'isle', 'city', 'republic', 'kingdom', 'state', 'island'}
+                        if last_word_before in proper_noun_indicators:
+                            disambiguation_score *= 0.1  # Strong penalty
         
         # "the country" / "country of" requires country-related facts
         if disambiguation_context['requires_country']:
@@ -478,10 +531,10 @@ def find_answer_in_substrate(
                                 noun_class_penalty *= 0.2  # Strong penalty for wrong class
                                 break
         
-        # Combined score (v0.9: added hedging, disambiguation, noun-class)
+        # Combined score (v1.0: added superlative_factor)
         combined = (anchor_score * proximity_bonus * qualifier_penalty * 
                    specificity_penalty * regional_penalty * hedging_penalty *
-                   disambiguation_score * noun_class_penalty + 
+                   disambiguation_score * noun_class_penalty * superlative_factor +
                    0.05 * (semantic_sim + 1) / 2)
         
         scores.append((i, fact, combined, anchor_score, proximity_bonus))

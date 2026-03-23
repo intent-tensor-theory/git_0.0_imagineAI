@@ -149,22 +149,32 @@ SOLAR_SYSTEM = [
     "Mercury is the smallest planet and closest to the Sun.",
     "Mercury has no moons.",
     "Venus is the hottest planet in our solar system.",
+    "Venus is the second planet from the Sun.",  # v1.0: Order
+    "Venus comes after Mercury in our solar system.",  # v1.0: Order
     "Venus rotates backwards compared to most planets.",
     "Earth is the only planet known to support life.",
+    "Earth is the third planet from the Sun.",  # v1.0: Order
     "Earth has one moon called the Moon.",
+    "Earth has exactly one moon.",  # v1.0: Explicit singular
+    "The number of moons Earth has is one.",  # v1.0: Direct answer format
     "Mars is known as the Red Planet.",
+    "Mars is the fourth planet from the Sun.",  # v1.0: Order
     "Mars has two moons named Phobos and Deimos.",
     "Jupiter is the largest planet in our solar system.",
+    "Jupiter is the fifth planet from the Sun.",  # v1.0: Order
     "Jupiter has the Great Red Spot, a giant storm.",
     "Jupiter has at least 95 known moons.",
     "Saturn is famous for its beautiful rings.",
     "Saturn is the second largest planet.",
+    "Saturn is the sixth planet from the Sun.",  # v1.0: Order
     "Saturn has at least 146 known moons.",
     "Titan is the largest moon of Saturn.",
     "Uranus rotates on its side.",
     "Uranus is the coldest planet in our solar system.",
+    "Uranus is the seventh planet from the Sun.",  # v1.0: Order
     "Neptune is the windiest planet.",
     "Neptune is the farthest planet from the Sun.",
+    "Neptune is the eighth planet from the Sun.",  # v1.0: Order
     "Pluto was reclassified as a dwarf planet in 2006.",
     "The asteroid belt is located between Mars and Jupiter.",
     "Ceres is the largest object in the asteroid belt.",
@@ -177,6 +187,8 @@ SOLAR_SYSTEM = [
 
 RIVERS = [
     "The Nile is the longest river in Africa.",
+    "The Nile River flows through Africa.",  # v1.0: Explicit location
+    "The Nile is located in Africa.",  # v1.0: Explicit location
     "The Amazon is the largest river by water volume.",
     "The Amazon River flows through South America.",
     "The Mississippi is the longest river in North America.",
@@ -207,6 +219,7 @@ MOUNTAINS = [
     "K2 is the second tallest mountain on Earth.",
     "Kangchenjunga is the third tallest mountain.",
     "Mount Kilimanjaro is the tallest mountain in Africa.",
+    "Mount Kilimanjaro is located in Africa.",  # v1.0: Explicit
     "Mount McKinley is the tallest mountain in North America.",
     "Denali is another name for Mount McKinley.",
     "Aconcagua is the tallest mountain in South America.",
@@ -215,6 +228,7 @@ MOUNTAINS = [
     "The Himalayas are the highest mountain range in the world.",
     "The Alps are a major mountain range in Europe.",
     "The Andes are the longest mountain range in the world.",
+    "The Andes are located in South America.",  # v1.0: Explicit
     "The Rocky Mountains are in North America.",
     "Mount Blanc is the highest peak in the Alps.",
     "The Appalachian Mountains are in eastern North America.",
@@ -251,6 +265,7 @@ OCEANS_SEAS = [
 DESERTS = [
     "The Sahara is the largest hot desert in the world.",
     "The Sahara Desert is in Africa.",
+    "The Sahara is the largest desert on Earth.",  # v1.0: Explicit without "hot"
     "Antarctica is technically the largest desert.",
     "The Gobi Desert is in Mongolia and China.",
     "The Arabian Desert is in the Middle East.",
@@ -296,6 +311,7 @@ CHEMISTRY = [
     "The chemical formula for carbon dioxide is CO2.",
     "Oxygen makes up about 21 percent of Earth's atmosphere.",
     "Nitrogen makes up about 78 percent of Earth's atmosphere.",
+    "Nitrogen is the most abundant gas in Earth's atmosphere.",  # v1.0: Explicit "most"
     "Gold has the chemical symbol Au.",
     "Silver has the chemical symbol Ag.",
     "Iron has the chemical symbol Fe.",
@@ -434,6 +450,7 @@ ANIMALS = [
     "The giant panda eats mostly bamboo.",
     "Tigers are the largest wild cats.",
     "Lions live in groups called prides.",
+    "The lion is known as the king of the jungle.",  # v1.0: Explicit
     "Crocodiles have the strongest bite of any animal.",
     "The box jellyfish is the most venomous animal.",
     "Elephants have excellent memories.",
@@ -490,6 +507,8 @@ ARTS_CULTURE = [
     "Mozart was a child prodigy composer.",
     "Ludwig van Beethoven composed nine symphonies.",
     "The Eiffel Tower is in Paris.",
+    "The Louvre is a famous museum in Paris.",  # v1.0: Explicit
+    "The Mona Lisa is displayed in the Louvre in Paris.",  # v1.0: Explicit
     "The Statue of Liberty was a gift from France.",
     "The Colosseum is in Rome.",
     "The Great Pyramid of Giza is in Egypt.",
@@ -528,6 +547,19 @@ SPORTS = [
 # GENERATE ALL FACTS
 # =============================================================================
 
+# v1.0: Explicit disambiguation facts
+DISAMBIGUATION_FACTS = [
+    # Georgia country vs US state
+    "Georgia is a country in the Caucasus region.",
+    "The country Georgia has its capital in Tbilisi.",
+    "Tbilisi is the capital of the country Georgia.",
+    "Georgia the country is located between Europe and Asia.",
+    # Washington state vs Washington D.C.
+    "Washington state has its capital in Olympia.",
+    "Olympia is the capital of Washington state.",
+    "Washington state is in the Pacific Northwest.",
+]
+
 def generate_all_facts():
     """Generate the complete fact corpus."""
     facts = []
@@ -557,6 +589,7 @@ def generate_all_facts():
     facts.extend(TECHNOLOGY)
     facts.extend(ARTS_CULTURE)
     facts.extend(SPORTS)
+    facts.extend(DISAMBIGUATION_FACTS)  # v1.0
     
     return facts
 
