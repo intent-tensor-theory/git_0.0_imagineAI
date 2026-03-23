@@ -71,6 +71,22 @@
             font-weight: 700;
         }
         
+        .version-link {
+            padding: 0.4rem 0.8rem;
+            background: rgba(59, 130, 246, 0.15);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 6px;
+            color: var(--accent);
+            text-decoration: none;
+            font-size: 0.6rem;
+            font-weight: 700;
+            transition: all 0.2s;
+        }
+        
+        .version-link:hover {
+            background: rgba(59, 130, 246, 0.25);
+        }
+        
         .status-badge {
             padding: 0.5rem 1rem;
             border-radius: 8px;
@@ -530,7 +546,8 @@
                 <p class="subtitle">Dynamic Tool Chain • Wikipedia RAG • Zero Pre-Training</p>
             </div>
         </div>
-        <div class="status-badge" id="statusBadge">
+        <a href="index.html" class="version-link">← v1.1 Local Corpus</a>
+        <div class="status-badge" id="statusBadge">>
             <div class="dot"></div>
             <span>World Knowledge Active</span>
         </div>
