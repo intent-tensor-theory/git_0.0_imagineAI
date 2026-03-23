@@ -217,16 +217,19 @@ const QUESTION_TYPES = {
         buildQueries: (m) => {
             const subj = m[3].replace(/^(a|an|the)\s+/i, '');
             const verb = m[4];
+            // More specific queries first
             return [
+                `${subj} flight speed`,            // "bird flight speed"
                 `${subj} ${verb} speed`,           // "birds fly speed"
-                `${subj} flight speed`,            // "birds flight speed" 
                 `fastest ${subj}`,                 // "fastest birds"
-                `${subj} speed`,                   // "birds speed"
-                `${subj} ${verb}ing speed`         // "birds flying speed"
+                `${subj} flight`,                  // "bird flight" - dedicated article
+                `${subj} locomotion`,              // "bird locomotion"
+                `${subj} speed`                    // "birds speed"
             ];
         },
-        answerKeywords: ['mph', 'km/h', 'km per hour', 'miles per hour', 'meters per second', 'm/s', 'speed', 'fast', 'velocity', /\d+\s*(mph|km|m\/s)/i],
-        directArticle: (m) => m[3].replace(/^(a|an|the)\s+/i, '') // Try "Bird" article
+        answerKeywords: ['mph', 'km/h', 'km per hour', 'miles per hour', 'meters per second', 'm/s', 'speed', 'velocity', /\d+\s*(mph|km|m\/s|kmh|km\/h)/i, /\d+\s*miles/i, /\d+\s*kilometers/i],
+        directArticle: (m) => `${m[3].replace(/^(a|an|the)\s+/i, '')} flight`, // Try "Bird flight" article
+        needsFullArticle: true  // Signal that we might need full article, not just intro
     },
     
     SPEED_IS: {
@@ -546,26 +549,62 @@ async function processQuery() {
         // STEP 3: Try Direct Article First
         setStepActive('direct');
         if (analysis.directArticle) {
-            debug(`Trying direct article: "${analysis.directArticle}"`);
-            const directContent = await wikiExtract(analysis.directArticle);
+            // Try the direct article name
+            let articleNames = [analysis.directArticle];
             
-            if (directContent && directContent.extract) {
-                const { score, matches } = scoreContent(directContent.extract, analysis.answerKeywords);
-                debug(`Direct article score: ${score} (matches: ${matches.join(', ')})`);
-                
-                if (score >= 5) {
-                    strategy = 'direct';
-                    finalArticle = directContent.title;
-                    finalContent = directContent.extract;
-                    debug(`✓ Direct article has answer!`);
-                    setStepComplete('direct', `✓ ${directContent.title}`);
-                } else {
-                    debug(`✗ Direct article doesn't have answer keywords`);
-                    setStepComplete('direct', 'No match');
+            // For speed questions, also try the base subject
+            if (analysis.type === 'SPEED_DO' || analysis.type === 'SPEED_IS') {
+                const baseSubj = analysis.match[3].replace(/^(a|an|the)\s+/i, '');
+                if (!articleNames.includes(baseSubj)) {
+                    articleNames.push(baseSubj);
                 }
-            } else {
-                debug(`✗ Direct article not found`);
-                setStepComplete('direct', 'Not found');
+                // Also try singular form
+                if (baseSubj.endsWith('s')) {
+                    articleNames.push(baseSubj.slice(0, -1));
+                }
+            }
+            
+            for (const articleName of articleNames) {
+                debug(`Trying direct article: "${articleName}"`);
+                
+                // First try intro only
+                let directContent = await wikiExtract(articleName, false);
+                
+                if (directContent && directContent.extract) {
+                    let { score, matches } = scoreContent(directContent.extract, analysis.answerKeywords);
+                    debug(`"${articleName}" intro score: ${score} (matches: ${matches.join(', ') || 'none'})`);
+                    
+                    // For speed questions, if intro score is low, try full article
+                    if (score < 5 && (analysis.type === 'SPEED_DO' || analysis.type === 'SPEED_IS')) {
+                        debug(`Trying full article for "${articleName}"...`);
+                        const fullContent = await wikiExtract(articleName, true);
+                        if (fullContent && fullContent.extract) {
+                            const fullScore = scoreContent(fullContent.extract, analysis.answerKeywords);
+                            if (fullScore.score > score) {
+                                score = fullScore.score;
+                                matches = fullScore.matches;
+                                directContent = fullContent;
+                                debug(`Full article score: ${score} (matches: ${matches.join(', ')})`);
+                            }
+                        }
+                    }
+                    
+                    if (score >= 5) {
+                        strategy = 'direct';
+                        finalArticle = directContent.title;
+                        finalContent = directContent.extract;
+                        debug(`✓ Direct article has answer!`);
+                        setStepComplete('direct', `✓ ${directContent.title}`);
+                        break; // Found good direct article
+                    }
+                } else {
+                    debug(`"${articleName}" not found`);
+                }
+            }
+            
+            if (!finalContent) {
+                debug(`✗ No direct article matched`);
+                setStepComplete('direct', 'No match');
             }
         } else {
             debug(`No direct article for this question type`);
