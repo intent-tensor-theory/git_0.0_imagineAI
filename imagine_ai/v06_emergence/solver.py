@@ -215,7 +215,8 @@ class EmergenceSolver:
             facts=self.facts,
             fact_embeddings=self.fact_embeddings,
             glove=self.glove,
-            anchor_words=anchor_words
+            anchor_words=anchor_words,
+            question=question
         )
         
         if self.verbose:

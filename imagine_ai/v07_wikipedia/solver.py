@@ -215,7 +215,8 @@ class WikipediaSolver:
             facts=candidate_facts,
             fact_embeddings=candidate_embeddings,
             glove=self.glove,
-            anchor_words=anchor_words
+            anchor_words=anchor_words,
+            question=question
         )
         
         if self.verbose:

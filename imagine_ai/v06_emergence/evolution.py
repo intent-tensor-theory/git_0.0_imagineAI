@@ -15,6 +15,7 @@ The field evolves until closure: ∂Φ/∂t ≈ 0 with S > 1
 """
 
 import numpy as np
+import re
 from typing import List, Tuple, Optional
 from dataclasses import dataclass
 
@@ -213,7 +214,8 @@ def find_answer_in_substrate(
     facts: List[str],
     fact_embeddings: List[np.ndarray],
     glove,
-    anchor_words: List[str] = None
+    anchor_words: List[str] = None,
+    question: str = ""
 ) -> Tuple[str, float]:
     """
     Given the final field configuration, find the answer.
@@ -230,21 +232,36 @@ def find_answer_in_substrate(
     if not facts or not fact_embeddings:
         return None, 0.0
     
-    # Words that indicate a partial/qualified answer (should be penalized)
-    QUALIFIER_PENALTY = {
-        'second': 0.3, 'third': 0.2, 'fourth': 0.1, 'fifth': 0.1,
-        'one of': 0.5, 'among': 0.5, 'nearly': 0.7, 'almost': 0.7,
-    }
+    # Extract question characteristics for context-aware scoring
+    question_lower = question.lower()
+    question_words = set(re.findall(r'\b[a-z]+\b', question_lower))
+    
+    # Does question ask for an ordinal? (second tallest, third largest, etc.)
+    question_asks_ordinal = any(ord in question_words for ord in ['second', 'third', 'fourth', 'fifth'])
+    
+    # Ordinal qualifiers - indicate a non-primary answer (penalized)
+    # Note: "second" can be ordinal OR time unit - we check context below
+    ORDINAL_QUALIFIERS = {'third', 'fourth', 'fifth'}
+    
+    # Phrases that indicate partial/qualified answer  
+    PARTIAL_PHRASES = {'one of', 'among', 'nearly', 'almost'}
     
     # Words that indicate specificity when anchor is general
     SPECIFICITY_QUALIFIERS = {'land', 'sea', 'marine', 'flying', 'bird'}
+    
+    # Regional qualifiers - if question doesn't specify region, penalize regional facts
+    REGIONAL_QUALIFIERS = {'in africa', 'in asia', 'in europe', 'in north america', 
+                           'in south america', 'in australia', 'in japan', 'in china',
+                           'in america', 'in the world'}
     
     # Score each fact
     scores = []
     
     for i, (fact, emb) in enumerate(zip(facts, fact_embeddings)):
         fact_lower = fact.lower()
-        fact_words_list = fact_lower.split()
+        # Use regex for word extraction (same as anchor extraction)
+        # This ensures "co-founded" becomes ['co', 'founded'] to match anchors
+        fact_words_list = re.findall(r'\b[a-z]+\b', fact_lower)
         fact_words = set(fact_words_list)
         
         # Component 1: Semantic similarity to Φ_final
@@ -256,11 +273,13 @@ def find_answer_in_substrate(
         # Component 2: Anchor satisfaction (ρ_q constraint)
         anchor_score = 0.0
         anchor_positions = []  # Track where anchors appear
+        direct_match_count = 0  # Count direct (not semantic) matches
         
         if anchor_words:
             for anchor in anchor_words:
                 best_match = 0.0
                 best_pos = -1
+                is_direct = False
                 
                 # Direct match (whole word only)
                 # Check if anchor is a complete word in the fact
@@ -270,6 +289,7 @@ def find_answer_in_substrate(
                     if anchor == clean_word:
                         best_match = 1.0
                         best_pos = pos
+                        is_direct = True
                         break
                 
                 # If no direct match, try semantic match
@@ -286,15 +306,18 @@ def find_answer_in_substrate(
                 anchor_score += best_match
                 if best_pos >= 0:
                     anchor_positions.append(best_pos)
+                if is_direct:
+                    direct_match_count += 1
             
             anchor_score = anchor_score / len(anchor_words) if anchor_words else 1.0
         else:
             anchor_score = 1.0
         
         # Component 3: Proximity bonus
-        # If multiple anchors appear close together, boost score
+        # If multiple anchors appear close together, give small boost
+        # But only for DIRECT matches (not semantic)
         proximity_bonus = 1.0
-        if len(anchor_positions) >= 2:
+        if len(anchor_positions) >= 2 and direct_match_count >= 2:
             anchor_positions.sort()
             # Calculate average distance between consecutive anchors
             total_dist = 0
@@ -302,19 +325,41 @@ def find_answer_in_substrate(
                 total_dist += anchor_positions[j+1] - anchor_positions[j]
             avg_dist = total_dist / (len(anchor_positions) - 1)
             
-            # Close together (dist <= 3) gets bonus, far apart gets penalty
+            # Smaller bonuses - proximity is a TIEBREAKER, not dominant
             if avg_dist <= 3:
-                proximity_bonus = 1.5  # Big bonus for adjacent anchors
+                proximity_bonus = 1.1  # Small bonus for adjacent anchors
             elif avg_dist <= 5:
-                proximity_bonus = 1.2
-            elif avg_dist > 10:
-                proximity_bonus = 0.8  # Penalty for far apart
+                proximity_bonus = 1.05
         
         # Component 4: Qualifier penalty
         qualifier_penalty = 1.0
-        for qual, penalty in QUALIFIER_PENALTY.items():
-            if qual in fact_lower:
-                qualifier_penalty *= penalty
+        
+        # Only penalize ordinals if question does NOT ask for an ordinal
+        if not question_asks_ordinal:
+            # Check for ordinal qualifiers (third, fourth, fifth)
+            for qual in ORDINAL_QUALIFIERS:
+                if qual in fact_words:
+                    qualifier_penalty *= 0.2
+            
+            # Special handling for "second" - distinguish ordinal from time unit
+            # "second tallest" = ordinal (penalize)
+            # "per second" = time unit (don't penalize)
+            if 'second' in fact_words:
+                # Check context - is it followed by a superlative or preceded by "per"?
+                is_time_unit = 'per' in fact_words or 'seconds' in fact_words
+                is_ordinal = any(sup in fact_lower for sup in ['second tallest', 'second largest', 'second longest', 'second biggest', 'second highest', 'second fastest', 'second most'])
+                if is_ordinal and not is_time_unit:
+                    qualifier_penalty *= 0.3
+        else:
+            # Question ASKS for ordinal - BOOST facts with matching ordinal
+            for qual in ['second', 'third', 'fourth', 'fifth']:
+                if qual in question_words and qual in fact_words:
+                    qualifier_penalty *= 1.5  # Boost for matching ordinal
+        
+        # Check for partial phrases
+        for phrase in PARTIAL_PHRASES:
+            if phrase in fact_lower:
+                qualifier_penalty *= 0.5
         
         # Component 5: Specificity penalty
         specificity_penalty = 1.0
@@ -324,8 +369,19 @@ def find_answer_in_substrate(
                 if qual in fact_words and qual not in anchor_set:
                     specificity_penalty *= 0.7
         
+        # Component 6: Regional penalty
+        # If question doesn't mention a region but fact does, penalize
+        regional_penalty = 1.0
+        if anchor_words:
+            question_has_region = any(region.split()[-1] in anchor_words for region in REGIONAL_QUALIFIERS)
+            if not question_has_region:
+                for region in REGIONAL_QUALIFIERS:
+                    if region in fact_lower:
+                        regional_penalty *= 0.6
+                        break  # Only apply once
+        
         # Combined score
-        combined = anchor_score * proximity_bonus * qualifier_penalty * specificity_penalty + 0.05 * (semantic_sim + 1) / 2
+        combined = anchor_score * proximity_bonus * qualifier_penalty * specificity_penalty * regional_penalty + 0.05 * (semantic_sim + 1) / 2
         
         scores.append((i, fact, combined, anchor_score, proximity_bonus))
     
