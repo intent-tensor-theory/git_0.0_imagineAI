@@ -3,430 +3,607 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>imagineAI v1.1 - Semantic Understanding + Wikipedia</title>
+    <title>imagineAI v1.1 - Dynamic Reference Resolver</title>
     <style>
         :root {
-            --bg-primary: #0a0a0f;
-            --bg-secondary: #12121a;
-            --bg-tertiary: #1a1a25;
-            --text-primary: #e8e8f0;
-            --text-secondary: #a0a0b0;
-            --accent: #6366f1;
-            --accent-glow: rgba(99, 102, 241, 0.3);
+            --bg: #010101;
+            --bg-card: #050505;
+            --bg-elevated: #080808;
+            --border: rgba(59, 130, 246, 0.1);
+            --text: rgba(191, 219, 254, 0.6);
+            --text-dim: rgba(191, 219, 254, 0.4);
+            --accent: #3b82f6;
+            --accent-dim: rgba(59, 130, 246, 0.2);
             --success: #22c55e;
             --warning: #f59e0b;
             --error: #ef4444;
-            --info: #3b82f6;
-            --border: #2a2a3a;
+            --purple: #a855f7;
         }
         
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
         body {
-            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: var(--bg-primary);
-            color: var(--text-primary);
+            font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+            background: var(--bg);
+            color: var(--text);
             min-height: 100vh;
-            display: flex;
-            flex-direction: column;
+            letter-spacing: -0.02em;
         }
         
+        /* Header */
         .header {
-            padding: 1rem 2rem;
+            padding: 1.5rem 2rem;
             border-bottom: 1px solid var(--border);
-            background: var(--bg-secondary);
             display: flex;
             justify-content: space-between;
-            align-items: center;
+            align-items: flex-end;
             flex-wrap: wrap;
             gap: 1rem;
         }
         
-        .header-left { display: flex; align-items: center; gap: 0.75rem; }
+        .header-left { display: flex; align-items: center; gap: 1rem; }
         
-        .logo {
-            width: 36px; height: 36px;
-            background: linear-gradient(135deg, var(--accent), #8b5cf6);
-            border-radius: 8px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 1.2rem; font-weight: bold;
-        }
-        
-        .header h1 { font-size: 1.4rem; font-weight: 600; }
-        .header .version {
-            background: var(--accent);
-            color: white;
-            padding: 0.15rem 0.4rem;
-            border-radius: 4px;
-            font-size: 0.65rem;
-            margin-left: 0.5rem;
-        }
-        .header .subtitle { font-size: 0.75rem; color: var(--text-secondary); }
-        
-        .mode-toggle {
-            display: flex;
-            background: var(--bg-tertiary);
-            border-radius: 8px;
-            padding: 4px;
-        }
-        .mode-toggle button {
-            padding: 0.5rem 1rem;
-            border: none;
-            background: transparent;
-            color: var(--text-secondary);
+        .logo-box {
+            padding: 0.5rem;
+            background: var(--accent-dim);
+            border: 1px solid rgba(59, 130, 246, 0.2);
             border-radius: 6px;
-            cursor: pointer;
-            font-size: 0.8rem;
-            transition: all 0.2s;
-        }
-        .mode-toggle button.active {
-            background: var(--accent);
-            color: white;
         }
         
-        .main-container {
-            flex: 1;
-            display: grid;
-            grid-template-columns: 1fr 350px;
-            gap: 1rem;
-            padding: 1rem;
-            max-width: 1400px;
-            margin: 0 auto;
-            width: 100%;
-        }
+        .logo-box svg { width: 24px; height: 24px; color: var(--accent); }
         
-        @media (max-width: 900px) {
-            .main-container { grid-template-columns: 1fr; }
-            .analysis-panel { order: -1; }
-        }
-        
-        /* Chat Panel */
-        .chat-panel {
-            display: flex;
-            flex-direction: column;
-            background: var(--bg-secondary);
-            border-radius: 12px;
-            border: 1px solid var(--border);
-            overflow: hidden;
-        }
-        
-        .messages {
-            flex: 1;
-            overflow-y: auto;
-            padding: 1rem;
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-            min-height: 400px;
-        }
-        
-        .message {
-            max-width: 90%;
-            padding: 1rem;
-            border-radius: 12px;
-            animation: fadeIn 0.3s ease;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        .message.user {
-            align-self: flex-end;
-            background: var(--accent);
-            color: white;
-        }
-        
-        .message.assistant {
-            align-self: flex-start;
-            background: var(--bg-tertiary);
-            border: 1px solid var(--border);
-        }
-        
-        .message .source-badge {
-            display: inline-block;
-            padding: 0.15rem 0.5rem;
-            border-radius: 4px;
-            font-size: 0.65rem;
-            margin-bottom: 0.5rem;
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 900;
             text-transform: uppercase;
-            font-weight: 600;
-        }
-        .source-badge.local { background: var(--success); color: white; }
-        .source-badge.wikipedia { background: var(--info); color: white; }
-        .source-badge.unknown { background: var(--error); color: white; }
-        
-        .message .answer { font-size: 1rem; margin-bottom: 0.5rem; }
-        .message .meta {
-            font-size: 0.7rem;
-            color: var(--text-secondary);
-            font-family: monospace;
-            padding-top: 0.5rem;
-            border-top: 1px solid var(--border);
-        }
-        
-        .input-area {
-            padding: 1rem;
-            border-top: 1px solid var(--border);
-            display: flex;
-            gap: 0.5rem;
-        }
-        
-        .input-area input {
-            flex: 1;
-            background: var(--bg-tertiary);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 0.75rem 1rem;
-            color: var(--text-primary);
-            font-size: 1rem;
-            outline: none;
-        }
-        .input-area input:focus { border-color: var(--accent); }
-        
-        .input-area button {
-            background: var(--accent);
-            border: none;
-            border-radius: 8px;
-            padding: 0.75rem 1.5rem;
+            font-style: italic;
             color: white;
-            font-weight: 600;
-            cursor: pointer;
-        }
-        .input-area button:disabled { opacity: 0.5; }
-        
-        /* Analysis Panel */
-        .analysis-panel {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
+            letter-spacing: -0.05em;
         }
         
-        .analysis-card {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 1rem;
-        }
+        .header h1 span { color: var(--accent); }
         
-        .analysis-card h3 {
-            font-size: 0.7rem;
+        .header .subtitle {
+            font-size: 0.55rem;
             text-transform: uppercase;
-            color: var(--text-secondary);
-            margin-bottom: 0.75rem;
+            letter-spacing: 0.4em;
+            color: rgba(59, 130, 246, 0.4);
+            font-weight: 700;
+        }
+        
+        .vector-badge {
+            padding: 0.5rem 1.25rem;
+            border-radius: 8px;
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 0.75rem;
+            transition: all 0.3s;
         }
         
-        /* Token Analysis */
-        .token-grid {
+        .vector-badge.question {
+            background: rgba(168, 85, 247, 0.05);
+            border: 1px solid rgba(168, 85, 247, 0.2);
+        }
+        
+        .vector-badge.statement {
+            background: rgba(34, 197, 94, 0.05);
+            border: 1px solid rgba(34, 197, 94, 0.2);
+        }
+        
+        .vector-badge .dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        
+        .vector-badge.question .dot { background: var(--purple); }
+        .vector-badge.statement .dot { background: var(--success); }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .vector-badge span {
+            font-size: 0.7rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            color: white;
+        }
+        
+        /* Main Grid */
+        .main {
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 2rem;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        @media (max-width: 1000px) {
+            .main { grid-template-columns: 1fr; }
+        }
+        
+        /* Input Card */
+        .input-card {
+            background: var(--bg-card);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 1.5rem;
+            position: relative;
+        }
+        
+        .input-card textarea {
+            width: 100%;
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 1.25rem;
+            font-weight: 500;
+            font-family: inherit;
+            resize: none;
+            min-height: 80px;
+            outline: none;
+        }
+        
+        .input-card textarea::placeholder { color: var(--text-dim); }
+        
+        /* Token Display */
+        .tokens-area {
+            margin-top: 2rem;
             display: flex;
             flex-wrap: wrap;
             gap: 0.5rem;
         }
         
         .token {
-            padding: 0.4rem 0.6rem;
+            padding: 0.5rem 0.75rem;
             border-radius: 6px;
-            font-size: 0.75rem;
-            border: 1px solid var(--border);
-            background: var(--bg-tertiary);
+            border: 1px solid;
+            transition: all 0.2s;
+            cursor: default;
         }
         
-        .token.corrected {
-            background: rgba(245, 158, 11, 0.15);
-            border-color: var(--warning);
+        .token.tool-snapped {
+            background: rgba(59, 130, 246, 0.2);
+            border-color: rgba(59, 130, 246, 0.5);
+            color: #93c5fd;
         }
-        .token.unknown {
-            background: rgba(239, 68, 68, 0.15);
-            border-color: var(--error);
-        }
+        
         .token.exact {
-            background: rgba(34, 197, 94, 0.1);
-            border-color: rgba(34, 197, 94, 0.3);
+            background: rgba(255,255,255,0.05);
+            border-color: rgba(255,255,255,0.1);
+            opacity: 0.7;
         }
         
-        .token .word { font-weight: 600; }
-        .token .pos {
-            font-size: 0.6rem;
-            color: var(--text-secondary);
+        .token.inferred {
+            background: rgba(239, 68, 68, 0.05);
+            border-color: rgba(239, 68, 68, 0.2);
+            color: #fca5a5;
+        }
+        
+        .token .word {
+            font-size: 0.75rem;
+            font-weight: 700;
             text-transform: uppercase;
         }
-        .token .correction {
+        
+        .token .meta {
             font-size: 0.6rem;
-            color: var(--warning);
+            font-weight: 900;
+            text-transform: uppercase;
+            opacity: 0.4;
+            margin-top: 0.25rem;
         }
         
-        /* Stats */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 0.5rem;
+        .token .correction {
+            font-size: 0.55rem;
+            color: var(--accent);
+            margin-top: 0.15rem;
         }
         
-        .stat {
-            background: var(--bg-tertiary);
-            padding: 0.5rem;
-            border-radius: 6px;
-            text-align: center;
+        .token .zap {
+            display: inline-block;
+            margin-left: 0.25rem;
+            color: var(--accent);
         }
-        .stat .value { font-size: 1.2rem; font-weight: 700; color: var(--accent); }
-        .stat .label { font-size: 0.6rem; color: var(--text-secondary); text-transform: uppercase; }
         
-        /* Welcome */
-        .welcome {
-            text-align: center;
-            padding: 2rem;
-            color: var(--text-secondary);
+        /* Thesaurus Matrix */
+        .thesaurus-card {
+            background: rgba(30, 58, 138, 0.05);
+            border: 1px solid rgba(30, 58, 138, 0.1);
+            border-radius: 12px;
+            padding: 1.25rem;
+            margin-top: 1.5rem;
         }
-        .welcome h2 { color: var(--text-primary); margin-bottom: 0.5rem; }
-        .welcome .feature {
-            background: var(--bg-tertiary);
-            padding: 1rem;
-            border-radius: 8px;
-            margin: 1rem 0;
-            border: 1px solid var(--border);
-        }
-        .welcome .examples { margin-top: 1rem; }
-        .welcome .examples button {
-            background: var(--bg-tertiary);
-            border: 1px solid var(--border);
-            color: var(--text-primary);
-            padding: 0.4rem 0.8rem;
-            border-radius: 6px;
-            margin: 0.2rem;
-            cursor: pointer;
-            font-size: 0.8rem;
-        }
-        .welcome .examples button:hover { border-color: var(--accent); }
-        .examples.wiki button { border-color: var(--info); }
         
-        /* Status Bar */
-        .status-bar {
-            padding: 0.4rem 1rem;
-            background: var(--bg-tertiary);
-            border-top: 1px solid var(--border);
-            font-size: 0.7rem;
-            color: var(--text-secondary);
-            text-align: center;
-        }
-        .status-bar .ready { color: var(--success); }
-        
-        /* Loading */
-        .loading {
+        .card-title {
+            font-size: 0.6rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            color: var(--accent);
+            margin-bottom: 1rem;
             display: flex;
             align-items: center;
             gap: 0.5rem;
-            padding: 1rem;
-            color: var(--text-secondary);
         }
-        .spinner {
-            width: 16px; height: 16px;
-            border: 2px solid var(--border);
-            border-top-color: var(--accent);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
+        
+        .thesaurus-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem;
+            background: rgba(0,0,0,0.4);
+            border-radius: 4px;
+            margin-bottom: 0.5rem;
         }
+        
+        .thesaurus-row .word {
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: white;
+        }
+        
+        .thesaurus-row .synonyms {
+            font-size: 0.6rem;
+            color: rgba(59, 130, 246, 0.5);
+            font-style: italic;
+            letter-spacing: -0.03em;
+        }
+        
+        /* Answer Card */
+        .answer-card {
+            background: var(--bg-elevated);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-top: 1.5rem;
+        }
+        
+        .answer-card .source {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.55rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 0.75rem;
+        }
+        
+        .answer-card .source.local { background: var(--success); color: black; }
+        .answer-card .source.wikipedia { background: var(--accent); color: white; }
+        .answer-card .source.none { background: var(--error); color: white; }
+        
+        .answer-card .text {
+            font-size: 1rem;
+            color: white;
+            line-height: 1.6;
+        }
+        
+        .answer-card .meta {
+            margin-top: 1rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            font-size: 0.65rem;
+            color: var(--text-dim);
+        }
+        
+        /* Right Panel */
+        .panel { display: flex; flex-direction: column; gap: 1.5rem; }
+        
+        .panel-card {
+            background: var(--bg-elevated);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 1.25rem;
+        }
+        
+        .panel-title {
+            font-size: 0.6rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            color: rgba(255,255,255,0.3);
+            margin-bottom: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+        }
+        
+        .stat {
+            background: var(--bg-card);
+            padding: 0.75rem;
+            border-radius: 6px;
+            text-align: center;
+        }
+        
+        .stat .value {
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: var(--accent);
+        }
+        
+        .stat .label {
+            font-size: 0.5rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--text-dim);
+            letter-spacing: 0.1em;
+        }
+        
+        /* Threshold Bars */
+        .threshold-item {
+            margin-bottom: 1.25rem;
+        }
+        
+        .threshold-item:last-child { margin-bottom: 0; }
+        
+        .threshold-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+        
+        .threshold-header .label {
+            font-size: 0.55rem;
+            font-weight: 700;
+            color: var(--text-dim);
+        }
+        
+        .threshold-header .value {
+            font-size: 0.55rem;
+            color: var(--accent);
+        }
+        
+        .threshold-bar {
+            height: 4px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        
+        .threshold-bar .fill {
+            height: 100%;
+            border-radius: 2px;
+            transition: width 0.5s;
+        }
+        
+        .threshold-bar .fill.blue { background: var(--accent); }
+        .threshold-bar .fill.green { background: var(--success); }
+        
+        /* Mode Toggle */
+        .mode-toggle {
+            display: flex;
+            background: var(--bg-card);
+            border-radius: 8px;
+            padding: 4px;
+            margin-bottom: 1rem;
+        }
+        
+        .mode-toggle button {
+            flex: 1;
+            padding: 0.6rem;
+            border: none;
+            background: transparent;
+            color: var(--text-dim);
+            font-family: inherit;
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .mode-toggle button.active {
+            background: var(--accent);
+            color: white;
+        }
+        
+        /* Protocol Box */
+        .protocol-box {
+            padding: 1.25rem;
+            background: rgba(30, 58, 138, 0.05);
+            border: 1px solid rgba(59, 130, 246, 0.1);
+            border-radius: 12px;
+        }
+        
+        .protocol-box h4 {
+            font-size: 0.6rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            color: white;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .protocol-box p {
+            font-size: 0.6rem;
+            line-height: 1.8;
+            color: rgba(59, 130, 246, 0.4);
+        }
+        
+        .protocol-box strong { color: rgba(59, 130, 246, 0.7); }
+        
+        /* Loading */
+        .loading { color: var(--accent); animation: spin 1s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
+        
+        /* Ask Button */
+        .ask-btn {
+            width: 100%;
+            padding: 0.875rem;
+            background: var(--accent);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-family: inherit;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            cursor: pointer;
+            transition: opacity 0.2s;
+            margin-top: 1rem;
+        }
+        
+        .ask-btn:hover { opacity: 0.9; }
+        .ask-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        
+        /* Status */
+        .status-bar {
+            padding: 0.5rem 2rem;
+            background: var(--bg-card);
+            border-top: 1px solid var(--border);
+            font-size: 0.6rem;
+            color: var(--text-dim);
+            text-align: center;
+        }
+        
+        .status-bar .ready { color: var(--success); }
     </style>
 </head>
 <body>
     <header class="header">
         <div class="header-left">
-            <div class="logo">Δ</div>
+            <div class="logo-box">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                </svg>
+            </div>
             <div>
-                <h1>imagineAI <span class="version">v1.1</span></h1>
-                <p class="subtitle">Semantic Understanding • Wikipedia Integration</p>
+                <h1>Intent-Tensor <span>1.1</span></h1>
+                <p class="subtitle">Dynamic Dictionary & Thesaurus • Wikipedia RAG</p>
             </div>
         </div>
-        <div class="mode-toggle">
-            <button id="modeLocal" class="active" onclick="setMode('local')">Local (788 facts)</button>
-            <button id="modeWiki" onclick="setMode('wiki')">+ Wikipedia</button>
+        <div class="vector-badge question" id="vectorBadge">
+            <div class="dot"></div>
+            <span>Vector: <span id="vectorType">NEUTRAL</span></span>
         </div>
     </header>
     
-    <div class="main-container">
-        <div class="chat-panel">
-            <div class="messages" id="messages">
-                <div class="welcome" id="welcome">
-                    <h2>imagineAI v1.1</h2>
-                    <p>Query Understanding + Real Dictionary + Wikipedia</p>
-                    
-                    <div class="feature">
-                        <strong>🧠 Now with real English dictionary</strong><br>
-                        <small>Words like "electricity", "weather", "frog" won't be mis-corrected!</small>
-                    </div>
-                    
-                    <div class="examples">
-                        <p><small>Local corpus (788 facts):</small></p>
-                        <button onclick="askExample('What is the capital of France?')">Capital of France</button>
-                        <button onclick="askExample('wat is teh bigest planit')">wat is teh bigest planit</button>
-                        <button onclick="askExample('Who painted the Mona Lisa?')">Mona Lisa</button>
-                    </div>
-                    
-                    <div class="examples wiki">
-                        <p><small style="color: var(--info);">Try with Wikipedia mode:</small></p>
-                        <button onclick="askExample('How fast is electricity?')">How fast is electricity?</button>
-                        <button onclick="askExample('What is a frog?')">What is a frog?</button>
-                        <button onclick="askExample('What causes weather?')">What causes weather?</button>
-                    </div>
+    <div class="main">
+        <div class="left-col">
+            <div class="input-card">
+                <textarea id="input" placeholder="Coordinate Stream..." spellcheck="false">wat is teh captial of Frace?</textarea>
+                
+                <div class="tokens-area" id="tokensArea">
+                    <!-- Tokens render here -->
                 </div>
+                
+                <button class="ask-btn" id="askBtn" onclick="processQuery()">Process Query</button>
             </div>
             
-            <div class="input-area">
-                <input type="text" id="input" placeholder="Ask anything... typos welcome!" 
-                       onkeypress="if(event.key==='Enter')ask()" disabled>
-                <button id="sendBtn" onclick="ask()" disabled>Ask</button>
+            <div class="thesaurus-card" id="thesaurusCard" style="display: none;">
+                <div class="card-title">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20M2 12h20"/>
+                    </svg>
+                    Relationship Matrix (Thesaurus)
+                </div>
+                <div id="thesaurusRows"></div>
+            </div>
+            
+            <div class="answer-card" id="answerCard" style="display: none;">
+                <span class="source" id="answerSource">LOCAL</span>
+                <div class="text" id="answerText"></div>
+                <div class="meta" id="answerMeta"></div>
             </div>
         </div>
         
-        <div class="analysis-panel">
-            <div class="analysis-card">
-                <h3>🔤 Token Analysis</h3>
-                <div class="token-grid" id="tokenGrid">
-                    <span style="color: var(--text-secondary); font-size: 0.8rem;">
-                        Ask a question to see analysis...
-                    </span>
+        <div class="panel">
+            <div class="panel-card">
+                <div class="panel-title">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                    </svg>
+                    Mode Selection
+                </div>
+                <div class="mode-toggle">
+                    <button id="modeLocal" class="active" onclick="setMode('local')">Local (788)</button>
+                    <button id="modeWiki" onclick="setMode('wiki')">+ Wikipedia</button>
                 </div>
             </div>
             
-            <div class="analysis-card">
-                <h3>📊 Query Stats</h3>
-                <div class="stats-grid" id="statsGrid">
+            <div class="panel-card">
+                <div class="panel-title">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/>
+                    </svg>
+                    Query Statistics
+                </div>
+                <div class="stats-grid">
                     <div class="stat">
-                        <div class="value" id="statTokens">-</div>
+                        <div class="value" id="statTokens">0</div>
                         <div class="label">Tokens</div>
                     </div>
                     <div class="stat">
-                        <div class="value" id="statCorrections">-</div>
+                        <div class="value" id="statCorrections">0</div>
                         <div class="label">Corrections</div>
                     </div>
                     <div class="stat">
-                        <div class="value" id="statAnchors">-</div>
+                        <div class="value" id="statAnchors">0</div>
                         <div class="label">Anchors</div>
                     </div>
                     <div class="stat">
-                        <div class="value" id="statCandidates">-</div>
+                        <div class="value" id="statCandidates">0</div>
                         <div class="label">Candidates</div>
                     </div>
                 </div>
             </div>
             
-            <div class="analysis-card">
-                <h3>🎯 Anchors Extracted</h3>
-                <div id="anchorsList" style="font-family: monospace; font-size: 0.8rem; color: var(--accent);">
-                    -
+            <div class="panel-card">
+                <div class="panel-title">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4 12 14.01l-3-3"/>
+                    </svg>
+                    Threshold Analysis
+                </div>
+                <div class="threshold-item">
+                    <div class="threshold-header">
+                        <span class="label">TOOL LATENCY</span>
+                        <span class="value" id="threshLatency">0.00ms</span>
+                    </div>
+                    <div class="threshold-bar">
+                        <div class="fill blue" id="barLatency" style="width: 0%"></div>
+                    </div>
+                </div>
+                <div class="threshold-item">
+                    <div class="threshold-header">
+                        <span class="label">RESONANCE CERTAINTY</span>
+                        <span class="value" id="threshCertainty">0.0%</span>
+                    </div>
+                    <div class="threshold-bar">
+                        <div class="fill green" id="barCertainty" style="width: 0%"></div>
+                    </div>
                 </div>
             </div>
             
-            <div class="analysis-card">
-                <h3>ℹ️ Mode Info</h3>
-                <div id="modeInfo" style="font-size: 0.75rem; color: var(--text-secondary);">
-                    <strong>Local Mode:</strong> Uses 788 curated facts.<br><br>
-                    <strong>Wikipedia Mode:</strong> Searches Wikipedia API when local corpus doesn't have the answer.
-                </div>
+            <div class="protocol-box">
+                <h4>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>
+                    </svg>
+                    V1.1 Protocol
+                </h4>
+                <p>
+                    The <strong>Dictionary Tool</strong> uses a real 10k English word corpus for spelling correction.
+                    The <strong>Thesaurus Cluster</strong> provides synonymic relationships.
+                    When local corpus fails, <strong>Wikipedia RAG</strong> fetches live knowledge.
+                </p>
             </div>
         </div>
     </div>
@@ -435,50 +612,104 @@
 
 <script>
 // =========================================================================
-// imagineAI v1.1 - Real Dictionary + Wikipedia Integration
+// imagineAI v1.1 - Dynamic Reference Resolver
+// Real Dictionary + Thesaurus + Wikipedia RAG
 // =========================================================================
 
 let DATA = null;
-let ENGLISH_DICT = null;  // Real English dictionary
-let CORPUS_VOCAB = null;  // Words from our facts corpus
-let MODE = 'local';       // 'local' or 'wiki'
+let ENGLISH_DICT = null;
+let MODE = 'local';
 
 // =========================================================================
-// ALIASES - Common text shortcuts
+// LINGUISTIC TOOLS
 // =========================================================================
-const ALIASES = {
-    'u': 'you', 'r': 'are', 'ur': 'your', 'teh': 'the', 'thier': 'their',
-    'wut': 'what', 'wat': 'what', 'whats': 'what', 'wher': 'where',
-    'wen': 'when', 'wich': 'which', 'hav': 'have', 'dont': "don't",
-    'cant': "can't", 'wont': "won't", 'captial': 'capital', 'capitol': 'capital',
-    'bigest': 'biggest', 'longst': 'longest', 'deepst': 'deepest',
-    'tallst': 'tallest', 'planit': 'planet', 'mountan': 'mountain'
+
+// Dynamic Dictionary with synonyms (like your React component)
+const DYNAMIC_DICTIONARY = {
+    // Question words
+    "what": { type: "WH", synonyms: [] },
+    "which": { type: "WH", synonyms: [] },
+    "who": { type: "WH", synonyms: [] },
+    "where": { type: "WH", synonyms: [] },
+    "when": { type: "WH", synonyms: [] },
+    "why": { type: "WH", synonyms: [] },
+    "how": { type: "WH", synonyms: [] },
+    // Verbs with synonyms
+    "is": { type: "VERB", synonyms: ["exists", "equals"] },
+    "are": { type: "VERB", synonyms: [] },
+    "tell": { type: "VERB", synonyms: ["inform", "narrate", "disclose"] },
+    "can": { type: "VERB", polarity: "INQUISITIVE", synonyms: ["be able to", "may"] },
+    "paint": { type: "VERB", synonyms: ["draw", "create", "illustrate"] },
+    "painted": { type: "VERB", synonyms: ["drew", "created"] },
+    "write": { type: "VERB", synonyms: ["compose", "author", "pen"] },
+    "wrote": { type: "VERB", synonyms: ["composed", "authored"] },
+    // Nouns with synonyms
+    "capital": { type: "NOUN", synonyms: ["seat of government", "main city"] },
+    "planet": { type: "NOUN", synonyms: ["orb", "world", "celestial body"] },
+    "country": { type: "NOUN", synonyms: ["nation", "state", "land"] },
+    "mountain": { type: "NOUN", synonyms: ["peak", "summit", "mount"] },
+    "river": { type: "NOUN", synonyms: ["stream", "waterway", "creek"] },
+    "ocean": { type: "NOUN", synonyms: ["sea", "waters", "deep"] },
+    "lake": { type: "NOUN", synonyms: ["pond", "body of water"] },
+    "city": { type: "NOUN", synonyms: ["town", "metropolis", "urban area"] },
+    "electricity": { type: "NOUN", synonyms: ["current", "power", "energy"] },
+    "weather": { type: "NOUN", synonyms: ["climate", "conditions", "atmosphere"] },
+    "frog": { type: "NOUN", synonyms: ["amphibian", "toad"] },
+    // Adjectives
+    "largest": { type: "ADJ", synonyms: ["biggest", "greatest"] },
+    "biggest": { type: "ADJ", synonyms: ["largest", "greatest"] },
+    "tallest": { type: "ADJ", synonyms: ["highest", "loftiest"] },
+    "deepest": { type: "ADJ", synonyms: ["most profound", "lowest"] },
+    "longest": { type: "ADJ", synonyms: ["most extended"] },
+    "fastest": { type: "ADJ", synonyms: ["quickest", "speediest"] },
+    "fast": { type: "ADJ", synonyms: ["quick", "rapid", "speedy"] },
+    // Determiners
+    "the": { type: "DET", synonyms: [] },
+    "a": { type: "DET", synonyms: [] },
+    "an": { type: "DET", synonyms: [] },
+    // Prepositions
+    "in": { type: "PREP", synonyms: ["within", "inside"] },
+    "of": { type: "PREP", synonyms: [] },
+    "on": { type: "PREP", synonyms: ["upon"] },
+    // Pronouns
+    "you": { type: "PRON", synonyms: [] },
+    "me": { type: "PRON", synonyms: [] },
+    "many": { type: "ADJ", synonyms: ["numerous", "several"] }
 };
 
-// POS patterns for basic classification
-const POS_PATTERNS = {
-    WH: ['what', 'which', 'who', 'where', 'when', 'why', 'how'],
-    DET: ['the', 'a', 'an', 'this', 'that', 'these', 'those', 'my', 'your', 'his', 'her', 'its', 'our', 'their'],
-    PREP: ['of', 'in', 'on', 'at', 'by', 'for', 'with', 'from', 'to', 'into', 'through', 'about', 'between'],
-    PRON: ['i', 'you', 'he', 'she', 'it', 'we', 'they', 'me', 'him', 'her', 'us', 'them'],
-    AUX: ['is', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 'do', 'does', 'did', 'can', 'could', 'will', 'would', 'should', 'may', 'might', 'must'],
-    CONJ: ['and', 'or', 'but', 'nor', 'so', 'yet'],
+// Static aliases for common typos
+const ALIASES = {
+    "u": "you", "r": "are", "ur": "your",
+    "teh": "the", "thier": "their",
+    "wut": "what", "wat": "what", "whats": "what",
+    "wher": "where", "wen": "when", "wich": "which",
+    "captial": "capital", "capitol": "capital",
+    "bigest": "biggest", "longst": "longest",
+    "deepst": "deepest", "tallst": "tallest",
+    "planit": "planet", "mountan": "mountain"
+};
+
+// Grammar Tensor (Markov chain for POS prediction)
+const GRAMMAR_TENSOR = {
+    "DET": { "NOUN": 0.60, "ADJ": 0.35, "VERB": 0.05 },
+    "WH": { "VERB": 0.50, "DET": 0.30, "NOUN": 0.20 },
+    "PRON": { "VERB": 0.60, "NOUN": 0.20, "ADV": 0.20 },
+    "VERB": { "PRON": 0.30, "DET": 0.30, "NOUN": 0.25, "ADJ": 0.15 },
+    "ADJ": { "NOUN": 0.85, "ADJ": 0.15 },
+    "PREP": { "DET": 0.50, "NOUN": 0.50 },
+    "NOUN": { "VERB": 0.40, "PREP": 0.30, "NOUN": 0.30 },
+    "UNKNOWN": { "NOUN": 0.50, "VERB": 0.30, "ADJ": 0.20 }
 };
 
 const STOP_WORDS = new Set([
-    ...POS_PATTERNS.DET, ...POS_PATTERNS.PREP, ...POS_PATTERNS.PRON,
-    ...POS_PATTERNS.AUX, ...POS_PATTERNS.CONJ, 'many', 'much', 'some', 'any'
+    'the', 'a', 'an', 'is', 'are', 'was', 'were', 'be', 'been',
+    'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would',
+    'to', 'of', 'in', 'for', 'on', 'with', 'at', 'by', 'from',
+    'this', 'that', 'i', 'me', 'my', 'you', 'your', 'we', 'they'
 ]);
 
-const SUPERLATIVE_SYNONYMS = {
-    'biggest': ['largest', 'biggest'], 'largest': ['biggest', 'largest'],
-    'tallest': ['tallest', 'highest'], 'highest': ['tallest', 'highest'],
-    'longest': ['longest'], 'deepest': ['deepest'],
-    'fastest': ['fastest', 'quickest'], 'hottest': ['hottest', 'warmest']
-};
-
 // =========================================================================
-// LEVENSHTEIN DISTANCE
+// LEVENSHTEIN DISTANCE (Tension Function)
 // =========================================================================
 function levenshtein(s, t) {
     if (!s) return t ? t.length : 0;
@@ -497,110 +728,139 @@ function levenshtein(s, t) {
 }
 
 // =========================================================================
-// SPELLING CORRECTION - Uses REAL English dictionary, NOT corpus
+// DYNAMIC REFERENCE RESOLVER
 // =========================================================================
-function correctSpelling(word) {
-    // Exact match in English dictionary
-    if (ENGLISH_DICT.has(word)) {
-        return { word, status: 'exact', distance: 0 };
+function resolveDynamic(word, expectedType) {
+    // Step 1: Check aliases first
+    if (ALIASES[word]) {
+        const resolved = ALIASES[word];
+        const info = DYNAMIC_DICTIONARY[resolved] || { type: expectedType };
+        return {
+            final: resolved,
+            type: info.type || expectedType,
+            synonyms: info.synonyms || [],
+            status: 'TOOL_SNAPPED',
+            confidence: 1.0
+        };
     }
     
-    // Find closest in English dictionary
-    let bestWord = word;
-    let bestDist = 3;  // Max distance threshold
-    let bestLen = 0;
+    // Step 2: Check if word is in REAL English dictionary (exact match = valid word)
+    if (ENGLISH_DICT && ENGLISH_DICT.has(word)) {
+        const info = DYNAMIC_DICTIONARY[word] || { type: expectedType };
+        return {
+            final: word,
+            type: info.type || inferPOS(word),
+            synonyms: info.synonyms || [],
+            status: 'EXACT',
+            confidence: 1.0
+        };
+    }
     
-    for (const dictWord of ENGLISH_DICT) {
-        if (Math.abs(word.length - dictWord.length) > 2) continue;
-        const dist = levenshtein(word, dictWord);
-        if (dist < bestDist || (dist === bestDist && dictWord.length > bestLen)) {
-            bestDist = dist;
-            bestWord = dictWord;
-            bestLen = dictWord.length;
+    // Step 3: Tension-based search in English dictionary
+    let bestMatch = null;
+    let minTension = 3;
+    
+    if (ENGLISH_DICT) {
+        for (const dictWord of ENGLISH_DICT) {
+            if (Math.abs(word.length - dictWord.length) > 2) continue;
+            const tension = levenshtein(word, dictWord);
+            if (tension < minTension || (tension === minTension && dictWord.length > (bestMatch?.length || 0))) {
+                minTension = tension;
+                bestMatch = dictWord;
+            }
         }
     }
     
-    if (bestDist <= 2 && bestWord !== word) {
-        return { word: bestWord, status: 'corrected', distance: bestDist };
+    if (bestMatch && minTension <= 2) {
+        const info = DYNAMIC_DICTIONARY[bestMatch] || { type: expectedType };
+        return {
+            final: bestMatch,
+            type: info.type || inferPOS(bestMatch),
+            synonyms: info.synonyms || [],
+            status: 'TOOL_SNAPPED',
+            confidence: 1.0 - (minTension / 10)
+        };
     }
     
-    // Unknown word - keep as is
-    return { word, status: 'unknown', distance: 0 };
+    // Step 4: Unknown word - infer type from grammar tensor
+    return {
+        final: word,
+        type: expectedType,
+        synonyms: [],
+        status: 'INFERRED',
+        confidence: 0.5
+    };
 }
 
-// =========================================================================
-// GET POS TAG
-// =========================================================================
-function getPOS(word) {
-    for (const [pos, words] of Object.entries(POS_PATTERNS)) {
-        if (words.includes(word)) return pos;
-    }
-    // Heuristics
+function inferPOS(word) {
     if (word.endsWith('ly')) return 'ADV';
     if (word.endsWith('ing') || word.endsWith('ed')) return 'VERB';
     if (word.endsWith('est') || word.endsWith('er')) return 'ADJ';
-    return 'NOUN';  // Default
+    if (word.endsWith('tion') || word.endsWith('ness')) return 'NOUN';
+    return 'NOUN';
 }
 
 // =========================================================================
-// QUERY UNDERSTANDING
+// QUERY UNDERSTANDING PIPELINE
 // =========================================================================
 function understandQuery(text) {
-    const rawTokens = text.toLowerCase().match(/[a-z]+/g) || [];
-    const tokens = [];
-    const corrections = [];
+    const startTime = performance.now();
+    const isQuestion = text.trim().endsWith('?');
+    const raw = text.toLowerCase().replace(/[^\w\s]/g, '').split(/\s+/).filter(x => x);
     
-    for (const raw of rawTokens) {
-        // Step 1: Check aliases first
-        if (ALIASES[raw]) {
-            tokens.push({
-                original: raw,
-                resolved: ALIASES[raw],
-                status: 'alias',
-                pos: getPOS(ALIASES[raw])
-            });
-            corrections.push({ from: raw, to: ALIASES[raw], type: 'alias' });
-            continue;
-        }
+    const tokens = [];
+    let inquisitiveScore = isQuestion ? 0.6 : 0;
+    
+    for (let i = 0; i < raw.length; i++) {
+        const word = raw[i];
+        const prevType = i > 0 ? (tokens[i-1]?.type || 'UNKNOWN') : 'UNKNOWN';
+        const probs = GRAMMAR_TENSOR[prevType] || GRAMMAR_TENSOR['UNKNOWN'];
+        const expectedType = Object.keys(probs).reduce((a, b) => probs[a] > probs[b] ? a : b);
         
-        // Step 2: Spelling correction using REAL dictionary
-        const corrected = correctSpelling(raw);
-        const pos = getPOS(corrected.word);
+        const resolved = resolveDynamic(word, expectedType);
         
         tokens.push({
-            original: raw,
-            resolved: corrected.word,
-            status: corrected.status,
-            pos: pos
+            original: word,
+            ...resolved
         });
         
-        if (corrected.status === 'corrected') {
-            corrections.push({ from: raw, to: corrected.word, type: 'spelling' });
+        if (resolved.type === 'WH' || DYNAMIC_DICTIONARY[resolved.final]?.polarity === 'INQUISITIVE') {
+            inquisitiveScore += (i === 0 ? 0.4 : 0.1);
         }
     }
     
     // Extract anchors (content words)
     const anchors = tokens
-        .filter(t => !STOP_WORDS.has(t.resolved) && t.resolved.length > 2)
-        .map(t => t.resolved);
+        .filter(t => !STOP_WORDS.has(t.final) && t.final.length > 2)
+        .map(t => t.final);
+    
+    // Get thesaurus entries
+    const thesaurus = tokens
+        .filter(t => t.synonyms && t.synonyms.length > 0)
+        .map(t => ({ word: t.final, synonyms: t.synonyms }));
+    
+    const corrections = tokens.filter(t => t.original !== t.final);
+    const latency = performance.now() - startTime;
     
     return {
         tokens,
-        corrections,
         anchors,
-        resolvedText: tokens.map(t => t.resolved).join(' ')
+        thesaurus,
+        corrections,
+        vectorType: inquisitiveScore > 0.55 ? 'QUESTION' : 'STATEMENT',
+        confidence: Math.min(inquisitiveScore, 1.0),
+        latency
     };
 }
 
 // =========================================================================
 // LOCAL CORPUS SOLVER
 // =========================================================================
-function solveLocal(query) {
-    const understanding = understandQuery(query);
-    const { tokens, anchors } = understanding;
+function solveLocal(understanding) {
+    const { anchors, tokens } = understanding;
     
     if (anchors.length === 0) {
-        return { ...understanding, answer: null, source: 'none', candidates: 0 };
+        return { answer: null, source: 'none', candidates: 0, score: 0 };
     }
     
     // Get candidates from inverted index
@@ -612,37 +872,25 @@ function solveLocal(query) {
         }
         // Stemmed
         const stem = anchor.replace(/s$/, '');
-        if (stem !== anchor) {
-            const stemIndices = DATA.inverted_index[stem] || [];
-            for (const idx of stemIndices) {
+        if (stem !== anchor && DATA.inverted_index[stem]) {
+            for (const idx of DATA.inverted_index[stem]) {
                 candidateScores[idx] = (candidateScores[idx] || 0) + 0.5;
-            }
-        }
-        // Superlative synonyms
-        if (SUPERLATIVE_SYNONYMS[anchor]) {
-            for (const syn of SUPERLATIVE_SYNONYMS[anchor]) {
-                const synIndices = DATA.inverted_index[syn] || [];
-                for (const idx of synIndices) {
-                    candidateScores[idx] = (candidateScores[idx] || 0) + 0.8;
-                }
             }
         }
     }
     
     let candidates = Object.entries(candidateScores)
         .sort((a, b) => b[1] - a[1])
-        .slice(0, 50)
+        .slice(0, 100)
         .map(([idx]) => parseInt(idx));
     
     if (candidates.length === 0) {
-        return { ...understanding, answer: null, source: 'local', candidates: 0 };
+        return { answer: null, source: 'local', candidates: 0, score: 0 };
     }
     
     // Score candidates
-    const functionWords = new Set(['in', 'of', 'on', 'at', 'by', 'for', 'with', 'from', 'to']);
-    const contentAnchors = anchors.filter(a => !functionWords.has(a));
-    const asksLocation = tokens.some(t => t.resolved === 'where');
-    const asksSuperlative = tokens.some(t => t.pos === 'ADJ' && t.resolved.endsWith('est'));
+    const asksLocation = tokens.some(t => t.final === 'where');
+    const asksSuperlative = tokens.some(t => t.type === 'ADJ' && t.final.endsWith('est'));
     
     let bestFact = null;
     let bestScore = 0;
@@ -653,35 +901,23 @@ function solveLocal(query) {
         const factWords = new Set(factLower.match(/\b[a-z]+\b/g) || []);
         
         let matches = 0;
-        for (const anchor of contentAnchors) {
-            if (factWords.has(anchor)) { matches++; continue; }
-            const stem = anchor.replace(/s$/, '');
-            if (factWords.has(stem)) { matches += 0.8; continue; }
-            if (SUPERLATIVE_SYNONYMS[anchor]) {
-                for (const syn of SUPERLATIVE_SYNONYMS[anchor]) {
-                    if (factWords.has(syn)) { matches++; break; }
-                }
-            }
+        for (const anchor of anchors) {
+            if (factWords.has(anchor)) matches++;
+            else if (factWords.has(anchor.replace(/s$/, ''))) matches += 0.8;
         }
         
-        if (contentAnchors.length === 0) continue;
-        let score = matches / contentAnchors.length;
-        if (matches >= contentAnchors.length) score *= 1.2;
+        let score = anchors.length > 0 ? matches / anchors.length : 0;
+        if (matches >= anchors.length) score *= 1.2;
         
         // Location boost
-        if (asksLocation && (factLower.includes('located') || factLower.includes('in the'))) {
-            score *= 2.0;
-        }
+        if (asksLocation && factLower.includes('located')) score *= 2.0;
         
         // Ordinal penalty
         if (asksSuperlative) {
-            for (const ord of ['second', 'third', 'fourth', 'fifth']) {
+            for (const ord of ['second', 'third', 'fourth']) {
                 if (factWords.has(ord)) { score *= 0.3; break; }
             }
-            // Global scope preference
-            if (factLower.includes('on earth') || factLower.includes('in the world')) {
-                score *= 1.3;
-            }
+            if (factLower.includes('on earth')) score *= 1.3;
         }
         
         if (score > bestScore) {
@@ -691,36 +927,29 @@ function solveLocal(query) {
     }
     
     return {
-        ...understanding,
         answer: bestFact,
-        score: bestScore,
         source: bestFact ? 'local' : 'none',
-        candidates: candidates.length
+        candidates: candidates.length,
+        score: bestScore
     };
 }
 
 // =========================================================================
-// WIKIPEDIA SEARCH (when local fails)
+// WIKIPEDIA RAG
 // =========================================================================
-async function searchWikipedia(query) {
-    const understanding = understandQuery(query);
+async function searchWikipedia(understanding) {
     const searchTerm = understanding.anchors.join(' ');
-    
-    if (!searchTerm) {
-        return { ...understanding, answer: null, source: 'none', candidates: 0 };
-    }
+    if (!searchTerm) return { answer: null, source: 'wikipedia', candidates: 0 };
     
     try {
-        // Wikipedia API search
         const searchUrl = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(searchTerm)}&format=json&origin=*&srlimit=3`;
         const searchRes = await fetch(searchUrl);
         const searchData = await searchRes.json();
         
         if (!searchData.query?.search?.length) {
-            return { ...understanding, answer: "No Wikipedia results found.", source: 'wikipedia', candidates: 0 };
+            return { answer: "No Wikipedia results found.", source: 'wikipedia', candidates: 0 };
         }
         
-        // Get the first result's extract
         const pageTitle = searchData.query.search[0].title;
         const extractUrl = `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(pageTitle)}&prop=extracts&exintro&explaintext&format=json&origin=*`;
         const extractRes = await fetch(extractUrl);
@@ -728,147 +957,125 @@ async function searchWikipedia(query) {
         
         const pages = extractData.query.pages;
         const pageId = Object.keys(pages)[0];
-        let extract = pages[pageId].extract || '';
+        const extract = pages[pageId].extract || '';
         
-        // Trim to first 2-3 sentences
         const sentences = extract.match(/[^.!?]+[.!?]+/g) || [];
         const answer = sentences.slice(0, 2).join(' ').trim();
         
         return {
-            ...understanding,
             answer: answer || "Found page but couldn't extract content.",
             source: 'wikipedia',
             wikiTitle: pageTitle,
             candidates: searchData.query.search.length
         };
-    } catch (error) {
-        console.error('Wikipedia error:', error);
-        return {
-            ...understanding,
-            answer: "Wikipedia search failed.",
-            source: 'error',
-            candidates: 0
-        };
+    } catch (e) {
+        console.error('Wikipedia error:', e);
+        return { answer: "Wikipedia search failed.", source: 'error', candidates: 0 };
     }
-}
-
-// =========================================================================
-// MAIN SOLVE FUNCTION
-// =========================================================================
-async function solve(query) {
-    // First try local
-    const localResult = solveLocal(query);
-    
-    // If local found answer or wiki mode is off, return local
-    if (localResult.answer || MODE === 'local') {
-        return localResult;
-    }
-    
-    // Try Wikipedia
-    return await searchWikipedia(query);
 }
 
 // =========================================================================
 // UI FUNCTIONS
 // =========================================================================
-function updateAnalysisPanel(result) {
-    // Token grid
-    const tokenGrid = document.getElementById('tokenGrid');
-    tokenGrid.innerHTML = result.tokens.map(t => {
-        let cls = t.status === 'corrected' ? 'corrected' : 
-                  t.status === 'unknown' ? 'unknown' : 'exact';
-        let correction = t.original !== t.resolved ? 
-            `<div class="correction">${t.original} → ${t.resolved}</div>` : '';
-        return `<div class="token ${cls}">
-            <div class="word">${t.resolved}</div>
-            <div class="pos">${t.pos}</div>
-            ${correction}
+function renderTokens(tokens) {
+    const area = document.getElementById('tokensArea');
+    area.innerHTML = tokens.map(t => {
+        const statusClass = t.status === 'TOOL_SNAPPED' ? 'tool-snapped' :
+                           t.status === 'EXACT' ? 'exact' : 'inferred';
+        const correction = t.original !== t.final ? 
+            `<div class="correction">→ ${t.final}</div>` : '';
+        const zap = t.status === 'TOOL_SNAPPED' ? '<span class="zap">⚡</span>' : '';
+        
+        return `<div class="token ${statusClass}">
+            <div class="word">${t.original}${zap}</div>
+            <div class="meta">${t.type}${correction}</div>
         </div>`;
     }).join('');
-    
-    // Stats
-    document.getElementById('statTokens').textContent = result.tokens.length;
-    document.getElementById('statCorrections').textContent = result.corrections.length;
-    document.getElementById('statAnchors').textContent = result.anchors.length;
-    document.getElementById('statCandidates').textContent = result.candidates || 0;
-    
-    // Anchors
-    document.getElementById('anchorsList').textContent = 
-        result.anchors.length > 0 ? result.anchors.join(', ') : '(none)';
 }
 
-function addMessage(content, type, result = null) {
-    const welcome = document.getElementById('welcome');
-    if (welcome) welcome.remove();
+function renderThesaurus(thesaurus) {
+    const card = document.getElementById('thesaurusCard');
+    const rows = document.getElementById('thesaurusRows');
     
-    const messages = document.getElementById('messages');
-    const div = document.createElement('div');
-    div.className = `message ${type}`;
-    
-    if (type === 'assistant' && result) {
-        const sourceClass = result.source === 'local' ? 'local' : 
-                           result.source === 'wikipedia' ? 'wikipedia' : 'unknown';
-        const sourceLabel = result.source === 'local' ? '📚 Local Corpus' :
-                           result.source === 'wikipedia' ? '🌐 Wikipedia' : '❓ Unknown';
-        
-        let html = `<span class="source-badge ${sourceClass}">${sourceLabel}</span>`;
-        html += `<div class="answer">${content}</div>`;
-        
-        if (result.corrections && result.corrections.length > 0) {
-            html += '<div style="margin: 0.5rem 0; padding: 0.3rem 0.5rem; background: rgba(245,158,11,0.1); border-radius: 4px; font-size: 0.75rem;">';
-            html += '✨ Corrections: ';
-            html += result.corrections.map(c => `<s>${c.from}</s>→${c.to}`).join(', ');
-            html += '</div>';
-        }
-        
-        html += `<div class="meta">S = ${(result.score || 0).toFixed(2)} • Anchors: ${result.anchors.join(', ')} • Candidates: ${result.candidates || 0}</div>`;
-        div.innerHTML = html;
-        
-        updateAnalysisPanel(result);
-    } else {
-        div.textContent = content;
+    if (thesaurus.length === 0) {
+        card.style.display = 'none';
+        return;
     }
     
-    messages.appendChild(div);
-    messages.scrollTop = messages.scrollHeight;
+    card.style.display = 'block';
+    rows.innerHTML = thesaurus.map(t => `
+        <div class="thesaurus-row">
+            <span class="word">${t.word}</span>
+            <span class="synonyms">${t.synonyms.join(' • ')}</span>
+        </div>
+    `).join('');
 }
 
-async function ask() {
-    const input = document.getElementById('input');
-    const question = input.value.trim();
-    if (!question) return;
+function renderAnswer(result, understanding) {
+    const card = document.getElementById('answerCard');
+    card.style.display = 'block';
     
-    addMessage(question, 'user');
-    input.value = '';
+    const source = document.getElementById('answerSource');
+    source.className = 'source ' + result.source;
+    source.textContent = result.source === 'local' ? '📚 LOCAL CORPUS' :
+                        result.source === 'wikipedia' ? '🌐 WIKIPEDIA' : '❓ NOT FOUND';
     
-    // Show loading
-    const loadingDiv = document.createElement('div');
-    loadingDiv.className = 'loading';
-    loadingDiv.innerHTML = '<div class="spinner"></div> Thinking...';
-    document.getElementById('messages').appendChild(loadingDiv);
-    
-    const result = await solve(question);
-    loadingDiv.remove();
-    
-    addMessage(result.answer || "I couldn't find an answer.", 'assistant', result);
+    document.getElementById('answerText').textContent = result.answer || "I couldn't find an answer.";
+    document.getElementById('answerMeta').textContent = 
+        `S = ${(result.score || 0).toFixed(2)} • Anchors: ${understanding.anchors.join(', ')} • Candidates: ${result.candidates}`;
 }
 
-function askExample(q) {
-    document.getElementById('input').value = q;
-    ask();
+function updateStats(understanding, result) {
+    document.getElementById('statTokens').textContent = understanding.tokens.length;
+    document.getElementById('statCorrections').textContent = understanding.corrections.length;
+    document.getElementById('statAnchors').textContent = understanding.anchors.length;
+    document.getElementById('statCandidates').textContent = result.candidates || 0;
+    
+    document.getElementById('threshLatency').textContent = understanding.latency.toFixed(2) + 'ms';
+    document.getElementById('barLatency').style.width = Math.min(understanding.latency * 10, 100) + '%';
+    
+    const certainty = understanding.tokens.filter(t => t.status !== 'INFERRED').length / understanding.tokens.length * 100;
+    document.getElementById('threshCertainty').textContent = certainty.toFixed(1) + '%';
+    document.getElementById('barCertainty').style.width = certainty + '%';
+    
+    // Vector badge
+    const badge = document.getElementById('vectorBadge');
+    badge.className = 'vector-badge ' + understanding.vectorType.toLowerCase();
+    document.getElementById('vectorType').textContent = understanding.vectorType;
+}
+
+async function processQuery() {
+    const text = document.getElementById('input').value.trim();
+    if (!text) return;
+    
+    document.getElementById('askBtn').disabled = true;
+    document.getElementById('askBtn').textContent = 'Processing...';
+    
+    // Step 1: Understand query
+    const understanding = understandQuery(text);
+    renderTokens(understanding.tokens);
+    renderThesaurus(understanding.thesaurus);
+    
+    // Step 2: Try local first
+    let result = solveLocal(understanding);
+    
+    // Step 3: If local fails and wiki mode, try Wikipedia
+    if (!result.answer && MODE === 'wiki') {
+        result = await searchWikipedia(understanding);
+    }
+    
+    // Step 4: Render
+    renderAnswer(result, understanding);
+    updateStats(understanding, result);
+    
+    document.getElementById('askBtn').disabled = false;
+    document.getElementById('askBtn').textContent = 'Process Query';
 }
 
 function setMode(mode) {
     MODE = mode;
     document.getElementById('modeLocal').classList.toggle('active', mode === 'local');
     document.getElementById('modeWiki').classList.toggle('active', mode === 'wiki');
-    
-    const info = document.getElementById('modeInfo');
-    if (mode === 'local') {
-        info.innerHTML = '<strong>Local Mode:</strong> Uses 788 curated facts only.<br><br>Spelling correction uses real English dictionary (not corpus-biased).';
-    } else {
-        info.innerHTML = '<strong>Wikipedia Mode:</strong> First checks local corpus, then searches Wikipedia API if no local answer.<br><br>Unlimited knowledge access!';
-    }
 }
 
 // =========================================================================
@@ -882,30 +1089,32 @@ async function init() {
         const response = await fetch('imagine_ai_data.json');
         DATA = await response.json();
         
-        // Build English dictionary set
         ENGLISH_DICT = new Set(DATA.english_dictionary || []);
         
-        // Build corpus vocabulary (for reference, not spelling)
-        CORPUS_VOCAB = new Set();
-        for (const fact of DATA.facts) {
-            const words = fact.toLowerCase().match(/\b[a-z]+\b/g) || [];
-            words.forEach(w => CORPUS_VOCAB.add(w));
-        }
-        
-        // Add common words to English dict
+        // Add dynamic dictionary words to English dict
+        Object.keys(DYNAMIC_DICTIONARY).forEach(w => ENGLISH_DICT.add(w));
         Object.values(ALIASES).forEach(w => ENGLISH_DICT.add(w));
         
         status.innerHTML = `<span class="ready">●</span> Ready • ${DATA.facts.length} facts • ${ENGLISH_DICT.size} dictionary words`;
         
-        document.getElementById('input').disabled = false;
-        document.getElementById('sendBtn').disabled = false;
-        document.getElementById('input').focus();
+        document.getElementById('askBtn').disabled = false;
         
-    } catch (error) {
-        status.textContent = `Error: ${error.message}`;
-        console.error(error);
+        // Auto-process initial query
+        processQuery();
+        
+    } catch (e) {
+        status.textContent = 'Error: ' + e.message;
+        console.error(e);
     }
 }
+
+// Handle Enter key
+document.getElementById('input').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        processQuery();
+    }
+});
 
 init();
 </script>
