@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>imagineAI - Intent Tensor Theory</title>
+    <title>imagineAI v1.1 - Semantic Understanding</title>
     <style>
         :root {
             --bg-primary: #0a0a0f;
@@ -14,6 +14,7 @@
             --accent: #6366f1;
             --accent-glow: rgba(99, 102, 241, 0.3);
             --success: #22c55e;
+            --warning: #f59e0b;
             --border: #2a2a3a;
         }
         
@@ -64,6 +65,16 @@
             margin-top: 0.25rem;
         }
         
+        .header .version {
+            display: inline-block;
+            background: var(--accent);
+            color: white;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            margin-left: 0.5rem;
+        }
+        
         /* Chat Container */
         .chat-container {
             flex: 1;
@@ -102,79 +113,97 @@
             align-self: flex-end;
             background: var(--accent);
             color: white;
-            border-bottom-right-radius: 4px;
         }
         
         .message.assistant {
             align-self: flex-start;
             background: var(--bg-tertiary);
             border: 1px solid var(--border);
-            border-bottom-left-radius: 4px;
         }
         
-        .message .answer {
-            font-size: 1.1rem;
+        .message .answer-text {
+            font-size: 1.05rem;
             margin-bottom: 0.75rem;
         }
         
-        .message .trace {
-            font-size: 0.8rem;
-            color: var(--text-secondary);
-            border-top: 1px solid var(--border);
-            padding-top: 0.75rem;
-            margin-top: 0.5rem;
-        }
-        
-        .message .trace code {
-            background: var(--bg-primary);
-            padding: 0.15rem 0.4rem;
-            border-radius: 4px;
-            font-family: 'SF Mono', Consolas, monospace;
+        .message .meta {
             font-size: 0.75rem;
+            color: var(--text-secondary);
+            padding-top: 0.5rem;
+            border-top: 1px solid var(--border);
+            font-family: 'SF Mono', Consolas, monospace;
         }
         
-        /* Selection Number Badge */
-        .s-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.3rem;
-            background: rgba(34, 197, 94, 0.15);
-            color: var(--success);
+        /* Corrections display */
+        .corrections {
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            border-radius: 8px;
+            padding: 0.5rem 0.75rem;
+            margin-bottom: 0.75rem;
+            font-size: 0.85rem;
+        }
+        
+        .corrections .label {
+            color: var(--warning);
+            font-weight: 600;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            margin-bottom: 0.25rem;
+        }
+        
+        .correction-item {
+            display: inline-block;
+            background: var(--bg-secondary);
             padding: 0.2rem 0.5rem;
             border-radius: 4px;
-            font-size: 0.75rem;
-            font-weight: 500;
+            margin: 0.15rem;
+            font-family: 'SF Mono', Consolas, monospace;
+            font-size: 0.8rem;
+        }
+        
+        .correction-item .old {
+            color: var(--text-secondary);
+            text-decoration: line-through;
+        }
+        
+        .correction-item .arrow {
+            color: var(--warning);
+            margin: 0 0.25rem;
+        }
+        
+        .correction-item .new {
+            color: var(--success);
         }
         
         /* Input Area */
         .input-area {
-            padding: 1rem;
+            padding: 1rem 2rem;
             border-top: 1px solid var(--border);
             background: var(--bg-secondary);
         }
         
         .input-wrapper {
-            display: flex;
-            gap: 0.75rem;
             max-width: 900px;
             margin: 0 auto;
+            display: flex;
+            gap: 0.75rem;
         }
         
         .input-wrapper input {
             flex: 1;
-            padding: 1rem 1.25rem;
+            background: var(--bg-tertiary);
             border: 1px solid var(--border);
             border-radius: 12px;
-            background: var(--bg-tertiary);
+            padding: 0.875rem 1.25rem;
             color: var(--text-primary);
             font-size: 1rem;
             outline: none;
-            transition: border-color 0.2s, box-shadow 0.2s;
+            transition: border-color 0.2s;
         }
         
         .input-wrapper input:focus {
             border-color: var(--accent);
-            box-shadow: 0 0 0 3px var(--accent-glow);
         }
         
         .input-wrapper input::placeholder {
@@ -182,13 +211,12 @@
         }
         
         .input-wrapper button {
-            padding: 1rem 1.5rem;
             background: var(--accent);
-            color: white;
             border: none;
             border-radius: 12px;
-            font-size: 1rem;
-            font-weight: 500;
+            padding: 0.875rem 1.5rem;
+            color: white;
+            font-weight: 600;
             cursor: pointer;
             transition: transform 0.1s, opacity 0.2s;
         }
@@ -204,36 +232,6 @@
         .input-wrapper button:disabled {
             opacity: 0.5;
             cursor: not-allowed;
-        }
-        
-        /* Loading State */
-        .loading {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            color: var(--text-secondary);
-            padding: 1rem;
-        }
-        
-        .loading .dots {
-            display: flex;
-            gap: 4px;
-        }
-        
-        .loading .dot {
-            width: 8px;
-            height: 8px;
-            background: var(--accent);
-            border-radius: 50%;
-            animation: bounce 1.4s infinite ease-in-out;
-        }
-        
-        .loading .dot:nth-child(1) { animation-delay: -0.32s; }
-        .loading .dot:nth-child(2) { animation-delay: -0.16s; }
-        
-        @keyframes bounce {
-            0%, 80%, 100% { transform: scale(0); }
-            40% { transform: scale(1); }
         }
         
         /* Status Bar */
@@ -262,13 +260,23 @@
             margin-bottom: 0.5rem;
         }
         
-        .welcome .equation {
-            font-family: 'SF Mono', Consolas, monospace;
+        .welcome .feature-box {
             background: var(--bg-tertiary);
             padding: 1rem;
             border-radius: 8px;
             margin: 1.5rem 0;
+            border: 1px solid var(--border);
+        }
+        
+        .welcome .feature-box h3 {
             color: var(--accent);
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .welcome .feature-box code {
+            font-family: 'SF Mono', Consolas, monospace;
+            color: var(--warning);
         }
         
         .welcome .examples {
@@ -284,10 +292,19 @@
             margin: 0.25rem;
             cursor: pointer;
             transition: border-color 0.2s;
+            font-size: 0.85rem;
         }
         
         .welcome .examples button:hover {
             border-color: var(--accent);
+        }
+        
+        .examples-messy button {
+            border-color: rgba(245, 158, 11, 0.3) !important;
+        }
+        
+        .examples-messy button:hover {
+            border-color: var(--warning) !important;
         }
     </style>
 </head>
@@ -296,25 +313,36 @@
         <h1>
             <span class="logo">Δ</span>
             imagineAI
+            <span class="version">v1.1</span>
         </h1>
-        <p class="subtitle">Intent Tensor Theory • Formula-Driven Navigation</p>
+        <p class="subtitle">Semantic Understanding • Query Compiler • Spell Correction</p>
     </header>
     
     <div class="chat-container">
         <div class="messages" id="messages">
             <div class="welcome" id="welcome">
-                <h2>Welcome to imagineAI</h2>
-                <p>Ask me anything. The answer emerges from mathematical constraints.</p>
-                <div class="equation">
-                    T* = argmin<sub>T</sub>( ||σ<sub>T</sub>||₁ + λ E<sub>T</sub> )
+                <h2>Welcome to imagineAI v1.1</h2>
+                <p>Now with <strong>Query Understanding</strong> - type naturally, even with typos!</p>
+                
+                <div class="feature-box">
+                    <h3>🧠 New in v1.1: Semantic Understanding</h3>
+                    <p>Type <code>wat is teh captial of Frace</code> and watch it resolve to <code>capital of france</code></p>
                 </div>
-                <p>788 facts • 100% accuracy • No hallucination possible</p>
+                
+                <p>788 facts • 100% accuracy • No hallucination • Spell correction</p>
+                
                 <div class="examples">
-                    <p style="margin-bottom: 0.5rem;">Try asking:</p>
+                    <p style="margin-bottom: 0.5rem;">Clean queries:</p>
                     <button onclick="askExample('What is the capital of Japan?')">Capital of Japan?</button>
                     <button onclick="askExample('What is the largest planet?')">Largest planet?</button>
-                    <button onclick="askExample('Who painted the Mona Lisa?')">Who painted Mona Lisa?</button>
-                    <button onclick="askExample('What is the deepest lake?')">Deepest lake?</button>
+                    <button onclick="askExample('Who painted the Mona Lisa?')">Mona Lisa?</button>
+                </div>
+                
+                <div class="examples examples-messy" style="margin-top: 1rem;">
+                    <p style="margin-bottom: 0.5rem; color: var(--warning);">Try messy queries:</p>
+                    <button onclick="askExample('wat is teh captial of Frace?')">wat is teh captial of Frace?</button>
+                    <button onclick="askExample('wut is the bigest planit?')">wut is the bigest planit?</button>
+                    <button onclick="askExample('wher is mount everst?')">wher is mount everst?</button>
                 </div>
             </div>
         </div>
@@ -325,7 +353,7 @@
             <input 
                 type="text" 
                 id="input" 
-                placeholder="Ask me anything..." 
+                placeholder="Ask anything... typos welcome!" 
                 disabled
                 onkeypress="if(event.key === 'Enter') ask()"
             >
@@ -339,29 +367,58 @@
 
     <script>
     // =========================================================================
-    // imagineAI Client-Side Solver
-    // Intent Tensor Theory Implementation in JavaScript
+    // imagineAI v1.1 Client-Side Solver
+    // Query Understanding + ITT Resolution
     // =========================================================================
     
     let DATA = null;
+    let VOCABULARY = null;
     
-    // Stop words for anchor extraction
+    // =========================================================================
+    // QUERY UNDERSTANDING MODULE
+    // =========================================================================
+    
+    // Common aliases / text shortcuts
+    const ALIASES = {
+        'u': 'you', 'r': 'are', 'ur': 'your',
+        'teh': 'the', 'thier': 'their',
+        'wut': 'what', 'wat': 'what', 'whos': 'whose',
+        'whats': 'what', 'dont': "don't", 'cant': "can't",
+        'wont': "won't", 'didnt': "didn't", 'doesnt': "doesn't",
+        'isnt': "isn't", 'arent': "aren't", 'wasnt': "wasn't",
+        'werent': "weren't", 'hasnt': "hasn't", 'havent': "haven't",
+        'captial': 'capital', 'capitl': 'capital', 'capitol': 'capital',
+        'wher': 'where', 'wen': 'when', 'wich': 'which',
+        'hav': 'have', 'wud': 'would', 'cud': 'could', 'shud': 'should',
+        'bigest': 'biggest', 'longst': 'longest', 'deepst': 'deepest',
+        'tallst': 'tallest', 'fastst': 'fastest', 'hotst': 'hottest',
+        'planit': 'planet', 'plannet': 'planet',
+        'rivr': 'river', 'mountan': 'mountain', 'mountin': 'mountain',
+        'contry': 'country', 'counrty': 'country'
+    };
+    
+    // Superlative synonyms
+    const SUPERLATIVE_SYNONYMS = {
+        'biggest': ['largest', 'biggest'],
+        'largest': ['biggest', 'largest'],
+        'smallest': ['smallest', 'tiniest'],
+        'tallest': ['tallest', 'highest'],
+        'highest': ['tallest', 'highest'],
+        'longest': ['longest'],
+        'deepest': ['deepest'],
+        'fastest': ['fastest', 'quickest'],
+        'hottest': ['hottest', 'warmest'],
+        'coldest': ['coldest', 'coolest']
+    };
+    
     const STOP_WORDS = new Set([
         'the', 'a', 'an', 'is', 'are', 'was', 'were', 'be', 'been', 'being',
         'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could',
-        'should', 'may', 'might', 'must', 'shall', 'can', 'need', 'dare',
-        'ought', 'used', 'to', 'of', 'in', 'for', 'on', 'with', 'at', 'by',
-        'from', 'as', 'into', 'through', 'during', 'before', 'after',
-        'above', 'below', 'between', 'under', 'again', 'further', 'then',
-        'once', 'here', 'there', 'when', 'where', 'why', 'how', 'all',
-        'each', 'few', 'more', 'most', 'other', 'some', 'such', 'no', 'nor',
-        'not', 'only', 'own', 'same', 'so', 'than', 'too', 'very', 'just',
-        'and', 'but', 'if', 'or', 'because', 'until', 'while', 'although',
-        'this', 'that', 'these', 'those', 'am', 'i', 'me', 'my', 'myself',
-        'we', 'our', 'ours', 'ourselves', 'you', 'your', 'yours', 'yourself',
-        'he', 'him', 'his', 'himself', 'she', 'her', 'hers', 'herself',
-        'it', 'its', 'itself', 'they', 'them', 'their', 'theirs', 'themselves',
-        'what', 'which', 'who', 'whom', 'whose', 'many', 'much', 'any'
+        'should', 'may', 'might', 'must', 'shall', 'can', 'need',
+        'to', 'of', 'in', 'for', 'on', 'with', 'at', 'by', 'from', 'as',
+        'this', 'that', 'these', 'those', 'am', 'i', 'me', 'my',
+        'we', 'our', 'you', 'your', 'he', 'him', 'his', 'she', 'her',
+        'it', 'its', 'they', 'them', 'their', 'many', 'much', 'any'
     ]);
     
     const SUPERLATIVES = new Set([
@@ -370,18 +427,116 @@
         'hottest', 'coldest', 'oldest', 'newest', 'most', 'least'
     ]);
     
-    const HEDGING_WORDS = new Set(['technically', 'considered', 'arguably', 'sometimes', 'often']);
+    // =========================================================================
+    // LEVENSHTEIN DISTANCE (Tension Function)
+    // =========================================================================
     
-    const ORDINAL_QUALIFIERS = new Set(['third', 'fourth', 'fifth']);
-    
-    const REGIONAL_QUALIFIERS = [
-        'in africa', 'in asia', 'in europe', 'in north america',
-        'in south america', 'in australia', 'in japan', 'in china',
-        'in america', 'in the world'
-    ];
+    function levenshteinDistance(s, t) {
+        if (!s) return t ? t.length : 0;
+        if (!t) return s.length;
+        
+        const m = s.length, n = t.length;
+        let prev = Array.from({length: n + 1}, (_, i) => i);
+        let curr = new Array(n + 1).fill(0);
+        
+        for (let i = 1; i <= m; i++) {
+            curr[0] = i;
+            for (let j = 1; j <= n; j++) {
+                const cost = s[i-1] === t[j-1] ? 0 : 1;
+                curr[j] = Math.min(prev[j] + 1, curr[j-1] + 1, prev[j-1] + cost);
+            }
+            [prev, curr] = [curr, prev];
+        }
+        return prev[n];
+    }
     
     // =========================================================================
-    // Vector Math (The Core ITT Operations)
+    // SPELLING CORRECTION
+    // =========================================================================
+    
+    function correctSpelling(word, maxDistance = 2) {
+        if (VOCABULARY.has(word)) {
+            return { word: word, distance: 0, status: 'exact' };
+        }
+        
+        let bestWord = word;
+        let bestDistance = maxDistance + 1;
+        let bestLen = 0;
+        
+        for (const vocabWord of VOCABULARY) {
+            if (Math.abs(word.length - vocabWord.length) > maxDistance) continue;
+            
+            const dist = levenshteinDistance(word, vocabWord);
+            if (dist < bestDistance || (dist === bestDistance && vocabWord.length > bestLen)) {
+                bestDistance = dist;
+                bestWord = vocabWord;
+                bestLen = vocabWord.length;
+            }
+        }
+        
+        if (bestDistance <= maxDistance) {
+            return { word: bestWord, distance: bestDistance, status: 'corrected' };
+        }
+        return { word: word, distance: 0, status: 'unknown' };
+    }
+    
+    // =========================================================================
+    // QUERY UNDERSTANDING PIPELINE
+    // =========================================================================
+    
+    function resolveQuery(text) {
+        const tokens = text.toLowerCase().match(/[a-z]+(?:'[a-z]+)?/g) || [];
+        const resolved = [];
+        const corrections = [];
+        
+        for (const token of tokens) {
+            // Step 1: Check aliases first
+            if (ALIASES[token]) {
+                resolved.push(ALIASES[token]);
+                corrections.push({ original: token, resolved: ALIASES[token], status: 'alias' });
+                continue;
+            }
+            
+            // Step 2: Spelling correction
+            const corrected = correctSpelling(token);
+            resolved.push(corrected.word);
+            
+            if (corrected.status === 'corrected') {
+                corrections.push({ 
+                    original: token, 
+                    resolved: corrected.word, 
+                    status: 'corrected' 
+                });
+            }
+        }
+        
+        return {
+            original: text,
+            resolved: resolved.join(' '),
+            tokens: resolved,
+            corrections: corrections
+        };
+    }
+    
+    function extractAnchors(tokens) {
+        return tokens.filter(w => !STOP_WORDS.has(w) && w.length > 2);
+    }
+    
+    function detectQuestionType(tokens, text) {
+        const textLower = text.toLowerCase();
+        return {
+            isQuestion: tokens.includes('what') || tokens.includes('who') || 
+                       tokens.includes('where') || tokens.includes('how') ||
+                       tokens.includes('which') || tokens.includes('when'),
+            asksLocation: tokens.includes('where') || textLower.includes('located'),
+            asksSuperlative: tokens.some(t => SUPERLATIVES.has(t)),
+            asksCount: tokens.includes('how') && tokens.includes('many'),
+            superlatives: tokens.filter(t => SUPERLATIVES.has(t))
+        };
+    }
+    
+    // =========================================================================
+    // Vector Math
     // =========================================================================
     
     function dot(a, b) {
@@ -410,50 +565,47 @@
         return result;
     }
     
-    // =========================================================================
-    // Text Processing
-    // =========================================================================
-    
-    function extractWords(text) {
-        return text.toLowerCase().match(/\b[a-z]+\b/g) || [];
-    }
-    
     function stem(word) {
         if (word.endsWith('s') && word.length > 3) return word.slice(0, -1);
         return word;
     }
     
-    function extractAnchors(question) {
-        const words = extractWords(question);
-        return words.filter(w => !STOP_WORDS.has(w) && w.length > 2);
-    }
-    
-    function getEmbedding(word) {
-        return DATA.embeddings[word] || null;
-    }
-    
     // =========================================================================
-    // The Solver - σ-Minimization with Boundary Constraints
-    // T* = argmin_T ( ||σ_T||₁ + λ E_T )
+    // THE SOLVER - v1.1 with Query Understanding
     // =========================================================================
     
     function solve(question) {
-        const questionLower = question.toLowerCase();
-        const questionWords = new Set(extractWords(question));
-        const anchorWords = extractAnchors(question);
+        // Step 1: Query Understanding
+        const queryResult = resolveQuery(question);
+        const tokens = queryResult.tokens;
+        const corrections = queryResult.corrections;
         
-        if (anchorWords.length === 0) {
-            return { answer: null, confidence: 0, trace: 'No anchors extracted' };
+        // Step 2: Extract anchors from resolved tokens
+        const anchors = extractAnchors(tokens);
+        
+        if (anchors.length === 0) {
+            return { 
+                answer: null, 
+                confidence: 0, 
+                trace: 'No anchors extracted',
+                corrections: corrections,
+                resolvedQuery: queryResult.resolved
+            };
         }
         
-        // Find candidates via inverted index (O(k) retrieval)
+        // Step 3: Question type detection
+        const questionType = detectQuestionType(tokens, queryResult.resolved);
+        
+        // Step 4: Get candidates via inverted index (with synonym expansion)
         const candidateScores = {};
-        for (const anchor of anchorWords) {
+        for (const anchor of anchors) {
+            // Direct lookup
             const indices = DATA.inverted_index[anchor] || [];
             for (const idx of indices) {
                 candidateScores[idx] = (candidateScores[idx] || 0) + 1;
             }
-            // Also try stemmed version
+            
+            // Stemmed lookup
             const stemmed = stem(anchor);
             if (stemmed !== anchor) {
                 const stemIndices = DATA.inverted_index[stemmed] || [];
@@ -461,188 +613,160 @@
                     candidateScores[idx] = (candidateScores[idx] || 0) + 0.5;
                 }
             }
+            
+            // Superlative synonym expansion
+            if (SUPERLATIVE_SYNONYMS[anchor]) {
+                for (const syn of SUPERLATIVE_SYNONYMS[anchor]) {
+                    const synIndices = DATA.inverted_index[syn] || [];
+                    for (const idx of synIndices) {
+                        candidateScores[idx] = (candidateScores[idx] || 0) + 0.8;
+                    }
+                }
+            }
         }
         
-        // Sort candidates by initial score
         let candidates = Object.entries(candidateScores)
             .sort((a, b) => b[1] - a[1])
             .slice(0, 100)
             .map(([idx]) => parseInt(idx));
         
         if (candidates.length === 0) {
-            return { answer: null, confidence: 0, trace: 'No candidates found' };
+            return { 
+                answer: null, 
+                confidence: 0, 
+                trace: 'No candidates found',
+                corrections: corrections,
+                resolvedQuery: queryResult.resolved
+            };
         }
         
-        // Compute question embedding (Φ₀)
-        const anchorEmbeddings = anchorWords.map(w => getEmbedding(w)).filter(e => e);
-        const questionEmb = meanVector(anchorEmbeddings);
-        
-        // Context detection
-        const questionAsksLocation = questionWords.has('where') || questionWords.has('located');
-        const questionAsksOrdinal = ['second', 'third', 'fourth', 'fifth'].some(o => questionWords.has(o));
-        const questionSuperlatives = [...questionWords].filter(w => SUPERLATIVES.has(w));
-        const requiresCountry = questionLower.includes('the country') || questionLower.includes('country of');
-        
-        // Score each candidate fact
-        const scores = [];
+        // Step 5: Score each candidate
+        let bestFact = null;
+        let bestScore = 0;
+        const functionWords = new Set(['in', 'of', 'on', 'at', 'by', 'for', 'with', 'from', 'to']);
+        const contentAnchors = anchors.filter(a => !functionWords.has(a));
         
         for (const idx of candidates) {
             const fact = DATA.facts[idx];
-            const factEmb = DATA.fact_embeddings[idx];
             const factLower = fact.toLowerCase();
-            const factWords = new Set(extractWords(fact));
-            const factWordsList = extractWords(fact);
+            const factWords = new Set(factLower.match(/\b[a-z]+\b/g) || []);
             
-            // Component 1: Semantic similarity to question
-            const semanticSim = cosineSim(factEmb, questionEmb);
-            
-            // Component 2: Anchor satisfaction (ρ_q constraint)
-            let anchorScore = 0;
-            let directMatches = 0;
-            
-            for (const anchor of anchorWords) {
-                const anchorStem = stem(anchor);
-                let bestMatch = 0;
-                
-                // Direct match (including stemmed)
-                for (const word of factWordsList) {
-                    const wordStem = stem(word);
-                    if (anchor === word || anchorStem === wordStem) {
-                        bestMatch = 1.0;
-                        directMatches++;
-                        break;
-                    }
+            // Anchor match score with synonym expansion
+            let matches = 0;
+            for (const anchor of contentAnchors) {
+                if (factWords.has(anchor)) {
+                    matches++;
+                    continue;
                 }
-                
-                // Semantic match if no direct
-                if (bestMatch < 1.0) {
-                    const anchorEmb = getEmbedding(anchor);
-                    if (anchorEmb) {
-                        for (const word of factWordsList) {
-                            const wordEmb = getEmbedding(word);
-                            if (wordEmb) {
-                                const sim = cosineSim(anchorEmb, wordEmb);
-                                const matchScore = 1.0 / (1.0 + Math.exp(-10 * (sim - 0.3)));
-                                bestMatch = Math.max(bestMatch, matchScore);
-                            }
-                        }
-                    }
+                const stemmed = stem(anchor);
+                if (factWords.has(stemmed)) {
+                    matches += 0.8;
+                    continue;
                 }
-                
-                anchorScore += bestMatch;
-            }
-            anchorScore /= anchorWords.length;
-            
-            // Component 3: Superlative matching
-            let superlativeFactor = 1.0;
-            const factSuperlatives = [...factWords].filter(w => SUPERLATIVES.has(w));
-            if (questionSuperlatives.length > 0) {
-                const matching = questionSuperlatives.filter(s => factWords.has(s));
-                if (matching.length > 0) {
-                    superlativeFactor = 1.5;
-                } else if (factSuperlatives.length > 0) {
-                    superlativeFactor = 0.4;
-                }
-            }
-            
-            // Component 4: Qualifier penalty
-            let qualifierPenalty = 1.0;
-            if (!questionAsksOrdinal) {
-                for (const qual of ORDINAL_QUALIFIERS) {
-                    if (factWords.has(qual)) qualifierPenalty *= 0.2;
-                }
-                if (factWords.has('second') && !factWords.has('per')) {
-                    if (factLower.includes('second tallest') || factLower.includes('second largest')) {
-                        qualifierPenalty *= 0.3;
-                    }
-                }
-            }
-            
-            // Component 5: Hedging penalty
-            let hedgingPenalty = 1.0;
-            for (const hedge of HEDGING_WORDS) {
-                if (factWords.has(hedge)) hedgingPenalty *= 0.7;
-            }
-            
-            // Component 6: Regional penalty (skip if asking location)
-            let regionalPenalty = 1.0;
-            if (!questionAsksLocation) {
-                const questionHasRegion = REGIONAL_QUALIFIERS.some(r => 
-                    anchorWords.includes(r.split(' ').pop())
-                );
-                if (!questionHasRegion) {
-                    for (const region of REGIONAL_QUALIFIERS) {
-                        if (factLower.includes(region)) {
-                            regionalPenalty *= 0.6;
+                // Check superlative synonyms
+                if (SUPERLATIVE_SYNONYMS[anchor]) {
+                    for (const syn of SUPERLATIVE_SYNONYMS[anchor]) {
+                        if (factWords.has(syn)) {
+                            matches++;
                             break;
                         }
                     }
                 }
             }
             
-            // Component 7: Country disambiguation
-            let disambiguationScore = 1.0;
+            if (contentAnchors.length === 0) continue;
+            let anchorScore = matches / contentAnchors.length;
+            if (matches >= contentAnchors.length) anchorScore *= 1.2;
             
-            // Proper noun detection (Port of Spain vs Spain)
-            for (const anchor of anchorWords) {
-                if (questionLower.includes(`of ${anchor}`)) {
-                    const pattern = ` of ${anchor}`;
-                    if (factLower.includes(pattern)) {
-                        const parts = factLower.split(pattern);
-                        if (parts[0].trim()) {
-                            const lastWord = parts[0].trim().split(' ').pop();
-                            const properNounIndicators = ['port', 'gulf', 'bay', 'isle', 'city', 'republic', 'kingdom', 'state', 'island'];
-                            if (properNounIndicators.includes(lastWord)) {
-                                disambiguationScore *= 0.1;
-                            }
-                        }
+            // Superlative factor
+            let superlativeFactor = 1.0;
+            if (questionType.asksSuperlative) {
+                const querySupSynonyms = new Set();
+                for (const sup of questionType.superlatives) {
+                    if (SUPERLATIVE_SYNONYMS[sup]) {
+                        SUPERLATIVE_SYNONYMS[sup].forEach(s => querySupSynonyms.add(s));
+                    } else {
+                        querySupSynonyms.add(sup);
+                    }
+                }
+                
+                for (const syn of querySupSynonyms) {
+                    if (factWords.has(syn)) {
+                        superlativeFactor = 1.5;
+                        break;
+                    }
+                }
+                
+                // Penalize ordinals
+                for (const ordinal of ['second', 'third', 'fourth', 'fifth']) {
+                    if (factWords.has(ordinal)) {
+                        superlativeFactor = 0.3;
+                        break;
                     }
                 }
             }
             
-            if (requiresCountry && factWords.has('country')) {
-                disambiguationScore *= 1.5;
+            // Location factor
+            let locationFactor = 1.0;
+            if (questionType.asksLocation) {
+                if (factLower.includes('located') || factLower.includes('in the')) {
+                    locationFactor = 2.0;
+                } else {
+                    locationFactor = 0.5;
+                }
             }
             
-            // Combined score (σ-minimization)
-            // Lower σ = higher combined score
-            const combined = (
-                anchorScore * 
-                superlativeFactor * 
-                qualifierPenalty * 
-                hedgingPenalty * 
-                regionalPenalty * 
-                disambiguationScore +
-                0.05 * (semanticSim + 1) / 2
-            );
+            // Scope factor (prefer global facts for unqualified superlatives)
+            let scopeFactor = 1.0;
+            if (questionType.asksSuperlative) {
+                const hasRegionalQualifier = ['africa', 'europe', 'asia', 'america', 'australia', 'japan', 'china']
+                    .some(r => queryResult.resolved.includes(r));
+                
+                if (!hasRegionalQualifier) {
+                    if (factLower.includes('on earth') || factLower.includes('in the world')) {
+                        scopeFactor = 1.3;
+                    } else if (['africa', 'europe', 'asia', 'america', 'australia', 'japan', 'base to peak', 'north america', 'south america']
+                        .some(r => factLower.includes(r))) {
+                        scopeFactor = 0.6;
+                    }
+                }
+            }
             
-            scores.push({
-                idx,
-                fact,
-                combined,
-                anchorScore,
-                semanticSim,
-                directMatches
-            });
+            // Regional penalty
+            let regionalPenalty = 1.0;
+            if (!questionType.asksLocation) {
+                const regions = ['africa', 'europe', 'asia', 'america', 'australia'];
+                for (const region of regions) {
+                    if (factLower.includes(region) && !contentAnchors.includes(region)) {
+                        regionalPenalty = 0.7;
+                        break;
+                    }
+                }
+            }
+            
+            // Combined score
+            const score = anchorScore * superlativeFactor * locationFactor * scopeFactor * regionalPenalty;
+            
+            if (score > bestScore) {
+                bestScore = score;
+                bestFact = fact;
+            }
         }
         
-        // Sort by combined score (Selection Number proxy)
-        scores.sort((a, b) => b.combined - a.combined);
-        
-        const best = scores[0];
-        const S = best.combined * 20; // Scale to Selection Number range
+        // Selection Number approximation
+        const avgConfidence = corrections.length > 0 ? 0.8 : 1.0;
+        const lossRate = 0.1 * (1 - avgConfidence);
+        const S = bestScore / Math.max(lossRate, 0.01);
         
         return {
-            answer: best.fact,
-            confidence: best.combined,
-            S: S,
-            trace: {
-                anchors: anchorWords,
-                candidates: candidates.length,
-                anchorScore: best.anchorScore.toFixed(3),
-                semanticSim: best.semanticSim.toFixed(3),
-                directMatches: best.directMatches
-            }
+            answer: bestFact || "I don't know the answer to that question.",
+            confidence: bestScore,
+            selectionNumber: S,
+            anchors: anchors,
+            candidatesChecked: candidates.length,
+            corrections: corrections,
+            resolvedQuery: queryResult.resolved,
+            trace: `Anchors: ${anchors.join(', ')} • Candidates: ${candidates.length}`
         };
     }
     
@@ -650,7 +774,7 @@
     // UI Functions
     // =========================================================================
     
-    function addMessage(content, type, trace = null) {
+    function addMessage(content, type, meta = null, corrections = null) {
         const welcome = document.getElementById('welcome');
         if (welcome) welcome.remove();
         
@@ -658,16 +782,28 @@
         const div = document.createElement('div');
         div.className = `message ${type}`;
         
-        if (type === 'assistant' && trace) {
-            div.innerHTML = `
-                <div class="answer">${content}</div>
-                <div class="trace">
-                    <span class="s-badge">S = ${trace.S ? trace.S.toFixed(2) : 'N/A'}</span>
-                    Anchors: <code>${trace.anchors?.join(', ') || 'none'}</code> • 
-                    Candidates: <code>${trace.candidates || 0}</code> •
-                    σ: <code>${trace.anchorScore || '0'}</code>
-                </div>
-            `;
+        if (type === 'assistant') {
+            let html = '';
+            
+            // Show corrections if any
+            if (corrections && corrections.length > 0) {
+                html += '<div class="corrections">';
+                html += '<div class="label">✨ Query Understanding</div>';
+                for (const c of corrections) {
+                    html += `<span class="correction-item">`;
+                    html += `<span class="old">${c.original}</span>`;
+                    html += `<span class="arrow">→</span>`;
+                    html += `<span class="new">${c.resolved}</span>`;
+                    html += '</span>';
+                }
+                html += '</div>';
+            }
+            
+            html += `<div class="answer-text">${content}</div>`;
+            if (meta) {
+                html += `<div class="meta">${meta}</div>`;
+            }
+            div.innerHTML = html;
         } else {
             div.textContent = content;
         }
@@ -684,23 +820,14 @@
         addMessage(question, 'user');
         input.value = '';
         
-        // Solve (this is synchronous - the math runs instantly)
+        // Solve using v1.1 engine
         const result = solve(question);
         
-        if (result.answer) {
-            addMessage(result.answer, 'assistant', {
-                S: result.S,
-                anchors: result.trace.anchors,
-                candidates: result.trace.candidates,
-                anchorScore: result.trace.anchorScore
-            });
-        } else {
-            addMessage("I couldn't find an answer in my knowledge base.", 'assistant', {
-                anchors: result.trace.anchors || [],
-                candidates: 0,
-                anchorScore: '0'
-            });
-        }
+        const meta = result.answer ? 
+            `S = ${result.selectionNumber?.toFixed(2) || '0.00'} • ${result.trace}` : 
+            'No answer found';
+        
+        addMessage(result.answer || "I couldn't find an answer.", 'assistant', meta, result.corrections);
     }
     
     function askExample(question) {
@@ -716,14 +843,21 @@
         const status = document.getElementById('status');
         
         try {
-            status.textContent = 'Loading knowledge base (5 MB)...';
-            
+            status.textContent = 'Loading imagineAI v1.1 data...';
             const response = await fetch('imagine_ai_data.json');
-            if (!response.ok) throw new Error('Failed to load data');
-            
             DATA = await response.json();
             
-            status.innerHTML = `<span class="ready">●</span> Ready • ${DATA.facts.length} facts • v1.0`;
+            // Build vocabulary from facts
+            VOCABULARY = new Set();
+            for (const fact of DATA.facts) {
+                const words = fact.toLowerCase().match(/\b[a-z]+\b/g) || [];
+                words.forEach(w => VOCABULARY.add(w));
+            }
+            // Add static dictionary words
+            Object.keys(ALIASES).forEach(k => VOCABULARY.add(k));
+            Object.values(ALIASES).forEach(v => VOCABULARY.add(v));
+            
+            status.innerHTML = `<span class="ready">●</span> Ready • ${DATA.facts.length} facts • v1.1 Semantic Understanding`;
             
             document.getElementById('input').disabled = false;
             document.getElementById('sendBtn').disabled = false;
@@ -735,7 +869,6 @@
         }
     }
     
-    // Start
     init();
     </script>
 </body>

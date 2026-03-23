@@ -586,8 +586,35 @@ class SemanticSolver:
                     regional_penalty = 0.7
                     break
         
+        # LOCATION QUESTION HANDLING
+        # If asking "where", strongly prefer facts with "located"
+        location_factor = 1.0
+        if question_type.get("asks_location"):
+            if "located" in fact_lower or "in the" in fact_lower:
+                location_factor = 2.0  # Strong boost for location facts
+            else:
+                location_factor = 0.5  # Penalize non-location facts
+        
+        # GLOBAL SCOPE PREFERENCE
+        # For superlatives without regional qualifiers, prefer "on Earth" / "in the world"
+        scope_factor = 1.0
+        if question_type.get("asks_superlative"):
+            # Check if query has regional qualifier
+            query_text = " ".join(t.resolved for t in tokens).lower()
+            has_regional_qualifier = any(r in query_text for r in 
+                ["africa", "europe", "asia", "america", "australia", "japan", "china"])
+            
+            if not has_regional_qualifier:
+                # Prefer global facts
+                if "on earth" in fact_lower or "in the world" in fact_lower:
+                    scope_factor = 1.3
+                # Penalize qualified facts (specific regions)
+                elif any(r in fact_lower for r in ["africa", "europe", "asia", "america", 
+                        "australia", "japan", "base to peak", "north america", "south america"]):
+                    scope_factor = 0.6
+        
         # Combined score
-        combined = anchor_score * superlative_factor * regional_penalty
+        combined = anchor_score * superlative_factor * regional_penalty * location_factor * scope_factor
         
         return combined
     
