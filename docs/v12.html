@@ -1,0 +1,1155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>imagineAI v1.2 - Dynamic World Knowledge</title>
+    <style>
+        :root {
+            --bg: #010101;
+            --bg-card: #050505;
+            --bg-elevated: #080808;
+            --border: rgba(59, 130, 246, 0.1);
+            --text: rgba(191, 219, 254, 0.6);
+            --text-dim: rgba(191, 219, 254, 0.4);
+            --accent: #3b82f6;
+            --accent-dim: rgba(59, 130, 246, 0.2);
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --purple: #a855f7;
+            --cyan: #06b6d4;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            letter-spacing: -0.02em;
+        }
+        
+        /* Header */
+        .header {
+            padding: 1.25rem 2rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        
+        .header-left { display: flex; align-items: center; gap: 1rem; }
+        
+        .logo-box {
+            width: 40px; height: 40px;
+            background: linear-gradient(135deg, var(--accent), var(--purple));
+            border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.25rem; font-weight: 900; color: white;
+        }
+        
+        .header h1 {
+            font-size: 1.4rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            font-style: italic;
+            color: white;
+            letter-spacing: -0.05em;
+        }
+        
+        .header h1 span { color: var(--cyan); }
+        
+        .header .subtitle {
+            font-size: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.4em;
+            color: rgba(6, 182, 212, 0.5);
+            font-weight: 700;
+        }
+        
+        .status-badge {
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            background: rgba(6, 182, 212, 0.1);
+            border: 1px solid rgba(6, 182, 212, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .status-badge .dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: var(--cyan);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.8); }
+        }
+        
+        .status-badge span {
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--cyan);
+        }
+        
+        /* Main Grid */
+        .main {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 1.5rem;
+            padding: 1.5rem;
+            max-width: 1500px;
+            margin: 0 auto;
+        }
+        
+        @media (max-width: 1100px) {
+            .main { grid-template-columns: 1fr; }
+        }
+        
+        /* Input Section */
+        .input-section {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        
+        .input-card {
+            background: var(--bg-card);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+        
+        .input-card textarea {
+            width: 100%;
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 1.25rem;
+            font-weight: 500;
+            font-family: inherit;
+            resize: none;
+            min-height: 60px;
+            outline: none;
+        }
+        
+        .input-card textarea::placeholder { color: var(--text-dim); }
+        
+        .ask-row {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+        
+        .ask-btn {
+            flex: 1;
+            padding: 0.875rem;
+            background: linear-gradient(135deg, var(--accent), var(--purple));
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-family: inherit;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            cursor: pointer;
+            transition: opacity 0.2s, transform 0.1s;
+        }
+        
+        .ask-btn:hover { opacity: 0.9; }
+        .ask-btn:active { transform: scale(0.98); }
+        .ask-btn:disabled { opacity: 0.5; cursor: wait; }
+        
+        /* Tool Chain Visualization */
+        .tool-chain {
+            background: var(--bg-card);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 1rem;
+        }
+        
+        .chain-title {
+            font-size: 0.6rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            color: var(--cyan);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .chain-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .chain-step {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.6rem 0.75rem;
+            background: var(--bg-elevated);
+            border-radius: 6px;
+            border-left: 3px solid transparent;
+            transition: all 0.3s;
+        }
+        
+        .chain-step.active {
+            border-left-color: var(--cyan);
+            background: rgba(6, 182, 212, 0.1);
+        }
+        
+        .chain-step.complete {
+            border-left-color: var(--success);
+        }
+        
+        .chain-step.error {
+            border-left-color: var(--error);
+        }
+        
+        .chain-step .icon {
+            width: 20px; height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.6rem;
+            background: rgba(255,255,255,0.1);
+            color: var(--text-dim);
+        }
+        
+        .chain-step.active .icon { background: var(--cyan); color: white; }
+        .chain-step.complete .icon { background: var(--success); color: white; }
+        
+        .chain-step .label {
+            flex: 1;
+            font-size: 0.65rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .chain-step .status {
+            font-size: 0.55rem;
+            color: var(--text-dim);
+        }
+        
+        .chain-step.active .status { color: var(--cyan); }
+        .chain-step.complete .status { color: var(--success); }
+        
+        /* Token Analysis */
+        .tokens-card {
+            background: var(--bg-card);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 1rem;
+        }
+        
+        .tokens-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 0.75rem;
+        }
+        
+        .token {
+            padding: 0.5rem 0.6rem;
+            border-radius: 6px;
+            border: 1px solid;
+            transition: all 0.2s;
+        }
+        
+        .token.dict-verified {
+            background: rgba(34, 197, 94, 0.1);
+            border-color: rgba(34, 197, 94, 0.3);
+        }
+        
+        .token.spell-fixed {
+            background: rgba(245, 158, 11, 0.15);
+            border-color: rgba(245, 158, 11, 0.4);
+        }
+        
+        .token.wiki-anchor {
+            background: rgba(6, 182, 212, 0.15);
+            border-color: rgba(6, 182, 212, 0.4);
+        }
+        
+        .token.unknown {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: rgba(239, 68, 68, 0.3);
+        }
+        
+        .token .word {
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        
+        .token .info {
+            font-size: 0.5rem;
+            color: var(--text-dim);
+            margin-top: 0.2rem;
+        }
+        
+        .token .correction {
+            font-size: 0.5rem;
+            color: var(--warning);
+        }
+        
+        /* Answer Section */
+        .answer-card {
+            background: var(--bg-elevated);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 1.5rem;
+            display: none;
+        }
+        
+        .answer-card.visible { display: block; }
+        
+        .answer-source {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.3rem 0.75rem;
+            border-radius: 4px;
+            font-size: 0.55rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 1rem;
+        }
+        
+        .answer-source.wikipedia {
+            background: rgba(6, 182, 212, 0.2);
+            color: var(--cyan);
+        }
+        
+        .answer-source.local {
+            background: rgba(34, 197, 94, 0.2);
+            color: var(--success);
+        }
+        
+        .answer-text {
+            font-size: 1rem;
+            color: white;
+            line-height: 1.7;
+        }
+        
+        .answer-meta {
+            margin-top: 1rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            font-size: 0.6rem;
+            color: var(--text-dim);
+        }
+        
+        .answer-meta a {
+            color: var(--cyan);
+            text-decoration: none;
+        }
+        
+        /* Right Panel */
+        .panel {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .panel-card {
+            background: var(--bg-elevated);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 1rem;
+        }
+        
+        .panel-title {
+            font-size: 0.55rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            color: rgba(255,255,255,0.3);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        /* API Calls Log */
+        .api-log {
+            max-height: 200px;
+            overflow-y: auto;
+            font-size: 0.6rem;
+        }
+        
+        .api-call {
+            padding: 0.5rem;
+            background: var(--bg-card);
+            border-radius: 4px;
+            margin-bottom: 0.5rem;
+            border-left: 2px solid var(--accent);
+        }
+        
+        .api-call.wiki { border-left-color: var(--cyan); }
+        .api-call.dict { border-left-color: var(--purple); }
+        
+        .api-call .endpoint {
+            color: var(--accent);
+            word-break: break-all;
+        }
+        
+        .api-call .time {
+            color: var(--text-dim);
+            font-size: 0.5rem;
+        }
+        
+        /* Stats */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.5rem;
+        }
+        
+        .stat {
+            background: var(--bg-card);
+            padding: 0.6rem;
+            border-radius: 6px;
+            text-align: center;
+        }
+        
+        .stat .value {
+            font-size: 1.25rem;
+            font-weight: 900;
+            color: var(--cyan);
+        }
+        
+        .stat .label {
+            font-size: 0.45rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--text-dim);
+        }
+        
+        /* Thesaurus */
+        .thesaurus-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.4rem 0.5rem;
+            background: var(--bg-card);
+            border-radius: 4px;
+            margin-bottom: 0.4rem;
+            font-size: 0.6rem;
+        }
+        
+        .thesaurus-row .word { color: white; font-weight: 700; }
+        .thesaurus-row .syns { color: var(--purple); font-style: italic; }
+        
+        /* Protocol */
+        .protocol-box {
+            padding: 1rem;
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.05), rgba(168, 85, 247, 0.05));
+            border: 1px solid rgba(59, 130, 246, 0.1);
+            border-radius: 12px;
+        }
+        
+        .protocol-box h4 {
+            font-size: 0.6rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            color: white;
+            margin-bottom: 0.5rem;
+        }
+        
+        .protocol-box p {
+            font-size: 0.55rem;
+            line-height: 1.8;
+            color: var(--text-dim);
+        }
+        
+        .protocol-box code {
+            background: rgba(0,0,0,0.3);
+            padding: 0.1rem 0.3rem;
+            border-radius: 3px;
+            color: var(--cyan);
+        }
+        
+        /* Loading */
+        .spinner {
+            width: 14px; height: 14px;
+            border: 2px solid var(--border);
+            border-top-color: var(--cyan);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            display: inline-block;
+        }
+        
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        /* Examples */
+        .examples {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+            margin-top: 0.75rem;
+        }
+        
+        .examples button {
+            padding: 0.4rem 0.75rem;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text);
+            font-family: inherit;
+            font-size: 0.65rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .examples button:hover {
+            border-color: var(--cyan);
+            color: var(--cyan);
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-left">
+            <div class="logo-box">Δ</div>
+            <div>
+                <h1>imagineAI <span>1.2</span></h1>
+                <p class="subtitle">Dynamic Tool Chain • Wikipedia RAG • Zero Pre-Training</p>
+            </div>
+        </div>
+        <div class="status-badge" id="statusBadge">
+            <div class="dot"></div>
+            <span>World Knowledge Active</span>
+        </div>
+    </header>
+    
+    <div class="main">
+        <div class="input-section">
+            <div class="input-card">
+                <textarea id="input" placeholder="Ask anything about the world..." spellcheck="false">How fast does electricity travel?</textarea>
+                <div class="ask-row">
+                    <button class="ask-btn" id="askBtn" onclick="processQuery()">
+                        🌐 Ask World Knowledge
+                    </button>
+                </div>
+                <div class="examples">
+                    <button onclick="tryExample('What is quantum mechanics?')">Quantum mechanics</button>
+                    <button onclick="tryExample('wat is teh captial of Frace?')">Typos test</button>
+                    <button onclick="tryExample('How do frogs breathe?')">Frog respiration</button>
+                    <button onclick="tryExample('Why is the sky blue?')">Sky color</button>
+                    <button onclick="tryExample('Who invented the telephone?')">Telephone</button>
+                </div>
+            </div>
+            
+            <div class="tool-chain">
+                <div class="chain-title">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"/>
+                    </svg>
+                    Tool Chain Pipeline
+                </div>
+                <div class="chain-steps" id="chainSteps">
+                    <div class="chain-step" data-step="tokenize">
+                        <div class="icon">1</div>
+                        <div class="label">Tokenize</div>
+                        <div class="status">Waiting...</div>
+                    </div>
+                    <div class="chain-step" data-step="dictionary">
+                        <div class="icon">2</div>
+                        <div class="label">Dictionary API</div>
+                        <div class="status">Waiting...</div>
+                    </div>
+                    <div class="chain-step" data-step="spelling">
+                        <div class="icon">3</div>
+                        <div class="label">Spelling Resolution</div>
+                        <div class="status">Waiting...</div>
+                    </div>
+                    <div class="chain-step" data-step="thesaurus">
+                        <div class="icon">4</div>
+                        <div class="label">Thesaurus API</div>
+                        <div class="status">Waiting...</div>
+                    </div>
+                    <div class="chain-step" data-step="anchors">
+                        <div class="icon">5</div>
+                        <div class="label">Anchor Extraction</div>
+                        <div class="status">Waiting...</div>
+                    </div>
+                    <div class="chain-step" data-step="wikipedia">
+                        <div class="icon">6</div>
+                        <div class="label">Wikipedia RAG</div>
+                        <div class="status">Waiting...</div>
+                    </div>
+                    <div class="chain-step" data-step="collapse">
+                        <div class="icon">7</div>
+                        <div class="label">ITT Collapse</div>
+                        <div class="status">Waiting...</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="tokens-card">
+                <div class="chain-title">🔤 Token Resolution</div>
+                <div class="tokens-grid" id="tokensGrid">
+                    <span style="color: var(--text-dim); font-size: 0.7rem;">Process a query to see token analysis...</span>
+                </div>
+            </div>
+            
+            <div class="answer-card" id="answerCard">
+                <div class="answer-source wikipedia" id="answerSource">
+                    🌐 Wikipedia
+                </div>
+                <div class="answer-text" id="answerText"></div>
+                <div class="answer-meta" id="answerMeta"></div>
+            </div>
+        </div>
+        
+        <div class="panel">
+            <div class="panel-card">
+                <div class="panel-title">📊 Pipeline Stats</div>
+                <div class="stats-grid">
+                    <div class="stat">
+                        <div class="value" id="statTokens">0</div>
+                        <div class="label">Tokens</div>
+                    </div>
+                    <div class="stat">
+                        <div class="value" id="statApiCalls">0</div>
+                        <div class="label">API Calls</div>
+                    </div>
+                    <div class="stat">
+                        <div class="value" id="statCorrections">0</div>
+                        <div class="label">Corrections</div>
+                    </div>
+                    <div class="stat">
+                        <div class="value" id="statLatency">0ms</div>
+                        <div class="label">Total Time</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="panel-card">
+                <div class="panel-title">📖 Thesaurus Clusters</div>
+                <div id="thesaurusPanel">
+                    <span style="color: var(--text-dim); font-size: 0.6rem;">Synonyms will appear here...</span>
+                </div>
+            </div>
+            
+            <div class="panel-card">
+                <div class="panel-title">🔗 API Calls Log</div>
+                <div class="api-log" id="apiLog">
+                    <span style="color: var(--text-dim); font-size: 0.6rem;">API calls will be logged here...</span>
+                </div>
+            </div>
+            
+            <div class="protocol-box">
+                <h4>v1.2 Protocol: Dynamic World Knowledge</h4>
+                <p>
+                    Query → <code>Dictionary API</code> → Spelling Resolution → 
+                    <code>Thesaurus API</code> → Anchor Extraction → 
+                    <code>Wikipedia RAG</code> → ITT Collapse → Answer
+                    <br><br>
+                    No pre-training. No curated corpus. The query <strong>becomes</strong> the URL.
+                    World knowledge is fetched on-demand via <code>origin=*</code> CORS bypass.
+                </p>
+            </div>
+        </div>
+    </div>
+
+<script>
+// =========================================================================
+// imagineAI v1.2 - Dynamic Tool Chain + Wikipedia RAG
+// The Query BECOMES the URL
+// =========================================================================
+
+const USER_AGENT = 'imagineAI/1.2 (https://intent-tensor-theory.github.io/git_0.0_imagineAI/)';
+
+let apiCallCount = 0;
+let totalLatency = 0;
+
+// =========================================================================
+// TOOL 1: DATAMUSE DICTIONARY API (Free, No Auth)
+// =========================================================================
+async function dictLookup(word) {
+    const url = `https://api.datamuse.com/words?sp=${word}&md=p&max=1`;
+    logApiCall('dict', url);
+    
+    try {
+        const res = await fetch(url);
+        const data = await res.json();
+        
+        if (data.length > 0 && data[0].word === word) {
+            const tags = data[0].tags || [];
+            const pos = tags.find(t => t.startsWith('n') || t.startsWith('v') || t.startsWith('adj'));
+            return {
+                exists: true,
+                word: data[0].word,
+                pos: parsePOS(pos),
+                score: data[0].score || 100
+            };
+        }
+        return { exists: false, word };
+    } catch (e) {
+        console.error('Dictionary API error:', e);
+        return { exists: false, word };
+    }
+}
+
+function parsePOS(tag) {
+    if (!tag) return 'UNKNOWN';
+    if (tag.startsWith('n')) return 'NOUN';
+    if (tag.startsWith('v')) return 'VERB';
+    if (tag.startsWith('adj')) return 'ADJ';
+    if (tag.startsWith('adv')) return 'ADV';
+    return 'UNKNOWN';
+}
+
+// =========================================================================
+// TOOL 2: DATAMUSE THESAURUS API (Free, No Auth)
+// =========================================================================
+async function thesaurusLookup(word) {
+    const url = `https://api.datamuse.com/words?rel_syn=${word}&max=5`;
+    logApiCall('dict', url);
+    
+    try {
+        const res = await fetch(url);
+        const data = await res.json();
+        return data.map(d => d.word);
+    } catch (e) {
+        console.error('Thesaurus API error:', e);
+        return [];
+    }
+}
+
+// =========================================================================
+// TOOL 3: SPELLING CORRECTION (Levenshtein + Dictionary)
+// =========================================================================
+async function spellCheck(word) {
+    // First check if word exists
+    const dict = await dictLookup(word);
+    if (dict.exists) return { word, corrected: false, pos: dict.pos };
+    
+    // Try to find similar words
+    const url = `https://api.datamuse.com/words?sp=${word}*&max=5`;
+    logApiCall('dict', url);
+    
+    try {
+        const res = await fetch(url);
+        const data = await res.json();
+        
+        if (data.length > 0) {
+            // Find closest by Levenshtein
+            let best = data[0].word;
+            let bestDist = levenshtein(word, best);
+            
+            for (const d of data) {
+                const dist = levenshtein(word, d.word);
+                if (dist < bestDist) {
+                    bestDist = dist;
+                    best = d.word;
+                }
+            }
+            
+            if (bestDist <= 2 && best !== word) {
+                return { word: best, corrected: true, original: word };
+            }
+        }
+        return { word, corrected: false };
+    } catch (e) {
+        return { word, corrected: false };
+    }
+}
+
+function levenshtein(s, t) {
+    if (!s) return t ? t.length : 0;
+    if (!t) return s.length;
+    const m = s.length, n = t.length;
+    let prev = Array.from({length: n + 1}, (_, i) => i);
+    let curr = new Array(n + 1).fill(0);
+    for (let i = 1; i <= m; i++) {
+        curr[0] = i;
+        for (let j = 1; j <= n; j++) {
+            curr[j] = Math.min(prev[j] + 1, curr[j-1] + 1, prev[j-1] + (s[i-1] === t[j-1] ? 0 : 1));
+        }
+        [prev, curr] = [curr, prev];
+    }
+    return prev[n];
+}
+
+// =========================================================================
+// TOOL 4: WIKIPEDIA SEARCH API
+// =========================================================================
+async function wikiSearch(query) {
+    const url = `https://en.wikipedia.org/w/api.php?` + new URLSearchParams({
+        action: 'query',
+        list: 'search',
+        srsearch: query,
+        format: 'json',
+        origin: '*',
+        srlimit: 5
+    });
+    
+    logApiCall('wiki', url);
+    
+    try {
+        const res = await fetch(url, {
+            headers: { 'Api-User-Agent': USER_AGENT }
+        });
+        const data = await res.json();
+        return data.query?.search || [];
+    } catch (e) {
+        console.error('Wikipedia search error:', e);
+        return [];
+    }
+}
+
+// =========================================================================
+// TOOL 5: WIKIPEDIA CONTENT EXTRACTION (RAG)
+// =========================================================================
+async function wikiExtract(title) {
+    const url = `https://en.wikipedia.org/w/api.php?` + new URLSearchParams({
+        action: 'query',
+        prop: 'extracts',
+        exintro: '1',
+        explaintext: '1',
+        titles: title,
+        format: 'json',
+        origin: '*'
+    });
+    
+    logApiCall('wiki', url);
+    
+    try {
+        const res = await fetch(url, {
+            headers: { 'Api-User-Agent': USER_AGENT }
+        });
+        const data = await res.json();
+        const pages = data.query?.pages || {};
+        const pageId = Object.keys(pages)[0];
+        
+        if (pageId === '-1') return null;
+        
+        return {
+            title: pages[pageId].title,
+            extract: pages[pageId].extract || '',
+            pageId
+        };
+    } catch (e) {
+        console.error('Wikipedia extract error:', e);
+        return null;
+    }
+}
+
+// =========================================================================
+// ALIASES (Quick resolution for common typos)
+// =========================================================================
+const ALIASES = {
+    'u': 'you', 'r': 'are', 'ur': 'your', 'teh': 'the',
+    'wat': 'what', 'wut': 'what', 'wher': 'where',
+    'captial': 'capital', 'bigest': 'biggest'
+};
+
+const STOP_WORDS = new Set([
+    'the', 'a', 'an', 'is', 'are', 'was', 'were', 'be',
+    'to', 'of', 'in', 'for', 'on', 'with', 'at', 'by',
+    'this', 'that', 'i', 'me', 'my', 'you', 'your',
+    'do', 'does', 'did', 'how', 'what', 'why', 'when', 'where', 'who'
+]);
+
+// =========================================================================
+// MAIN PIPELINE: Query → Tools → Answer
+// =========================================================================
+async function processQuery() {
+    const input = document.getElementById('input').value.trim();
+    if (!input) return;
+    
+    const startTime = performance.now();
+    apiCallCount = 0;
+    
+    resetChainSteps();
+    document.getElementById('askBtn').disabled = true;
+    document.getElementById('askBtn').innerHTML = '<span class="spinner"></span> Processing...';
+    
+    try {
+        // STEP 1: Tokenize
+        setStepActive('tokenize');
+        const rawTokens = input.toLowerCase().replace(/[^\w\s]/g, '').split(/\s+/).filter(x => x);
+        setStepComplete('tokenize', `${rawTokens.length} tokens`);
+        
+        // STEP 2: Dictionary + STEP 3: Spelling
+        setStepActive('dictionary');
+        const tokens = [];
+        const corrections = [];
+        const thesaurusData = {};
+        
+        for (const raw of rawTokens) {
+            // Quick alias check
+            if (ALIASES[raw]) {
+                tokens.push({
+                    original: raw,
+                    resolved: ALIASES[raw],
+                    status: 'alias',
+                    pos: 'UNKNOWN'
+                });
+                corrections.push({ from: raw, to: ALIASES[raw] });
+                continue;
+            }
+            
+            // Dictionary lookup
+            const dictResult = await dictLookup(raw);
+            
+            if (dictResult.exists) {
+                tokens.push({
+                    original: raw,
+                    resolved: raw,
+                    status: 'verified',
+                    pos: dictResult.pos
+                });
+            } else {
+                // Try spelling correction
+                setStepActive('spelling');
+                const spellResult = await spellCheck(raw);
+                
+                if (spellResult.corrected) {
+                    tokens.push({
+                        original: raw,
+                        resolved: spellResult.word,
+                        status: 'corrected',
+                        pos: 'UNKNOWN'
+                    });
+                    corrections.push({ from: raw, to: spellResult.word });
+                } else {
+                    tokens.push({
+                        original: raw,
+                        resolved: raw,
+                        status: 'unknown',
+                        pos: 'UNKNOWN'
+                    });
+                }
+            }
+        }
+        
+        setStepComplete('dictionary', `${tokens.filter(t => t.status === 'verified').length} verified`);
+        setStepComplete('spelling', `${corrections.length} fixed`);
+        
+        // STEP 4: Thesaurus for content words
+        setStepActive('thesaurus');
+        const anchors = tokens
+            .filter(t => !STOP_WORDS.has(t.resolved) && t.resolved.length > 2)
+            .map(t => t.resolved);
+        
+        for (const anchor of anchors.slice(0, 3)) {
+            const syns = await thesaurusLookup(anchor);
+            if (syns.length > 0) {
+                thesaurusData[anchor] = syns;
+            }
+        }
+        setStepComplete('thesaurus', `${Object.keys(thesaurusData).length} clusters`);
+        
+        // STEP 5: Anchor Extraction
+        setStepActive('anchors');
+        const searchQuery = anchors.join(' ');
+        setStepComplete('anchors', `"${searchQuery}"`);
+        
+        // STEP 6: Wikipedia RAG
+        setStepActive('wikipedia');
+        const searchResults = await wikiSearch(searchQuery);
+        
+        if (searchResults.length === 0) {
+            setStepError('wikipedia', 'No results');
+            showAnswer(null, tokens, corrections, thesaurusData, startTime);
+            return;
+        }
+        
+        // Get content from top result
+        const content = await wikiExtract(searchResults[0].title);
+        setStepComplete('wikipedia', `"${searchResults[0].title}"`);
+        
+        // STEP 7: ITT Collapse (find best sentences)
+        setStepActive('collapse');
+        const answer = extractBestAnswer(content?.extract || '', anchors);
+        setStepComplete('collapse', 'Stable state');
+        
+        // Show results
+        showAnswer({
+            text: answer,
+            title: content?.title,
+            wikiUrl: `https://en.wikipedia.org/wiki/${encodeURIComponent(content?.title || '')}`
+        }, tokens, corrections, thesaurusData, startTime);
+        
+    } catch (e) {
+        console.error('Pipeline error:', e);
+        showAnswer(null, [], [], {}, startTime);
+    } finally {
+        document.getElementById('askBtn').disabled = false;
+        document.getElementById('askBtn').innerHTML = '🌐 Ask World Knowledge';
+    }
+}
+
+// =========================================================================
+// ITT COLLAPSE: Score sentences against anchors
+// =========================================================================
+function extractBestAnswer(text, anchors) {
+    if (!text) return "I couldn't find information about that.";
+    
+    // Split into sentences
+    const sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
+    
+    if (sentences.length === 0) return text.slice(0, 300);
+    
+    // Score each sentence
+    const scored = sentences.map(s => {
+        const sLower = s.toLowerCase();
+        let score = 0;
+        
+        for (const anchor of anchors) {
+            if (sLower.includes(anchor)) {
+                score += 2;
+            }
+            // Partial match
+            if (anchor.length > 4 && sLower.includes(anchor.slice(0, -1))) {
+                score += 1;
+            }
+        }
+        
+        // Prefer earlier sentences (intro is usually most relevant)
+        const positionBonus = 1 / (sentences.indexOf(s) + 1);
+        score += positionBonus;
+        
+        return { sentence: s.trim(), score };
+    });
+    
+    // Get top 2-3 sentences
+    scored.sort((a, b) => b.score - a.score);
+    const topSentences = scored.slice(0, 3).map(s => s.sentence);
+    
+    // Return in original order
+    const result = sentences
+        .filter(s => topSentences.includes(s.trim()))
+        .slice(0, 2)
+        .join(' ')
+        .trim();
+    
+    return result || sentences[0];
+}
+
+// =========================================================================
+// UI HELPERS
+// =========================================================================
+function setStepActive(step) {
+    document.querySelector(`[data-step="${step}"]`).className = 'chain-step active';
+    document.querySelector(`[data-step="${step}"] .status`).innerHTML = '<span class="spinner"></span>';
+}
+
+function setStepComplete(step, info) {
+    document.querySelector(`[data-step="${step}"]`).className = 'chain-step complete';
+    document.querySelector(`[data-step="${step}"] .status`).textContent = info;
+}
+
+function setStepError(step, info) {
+    document.querySelector(`[data-step="${step}"]`).className = 'chain-step error';
+    document.querySelector(`[data-step="${step}"] .status`).textContent = info;
+}
+
+function resetChainSteps() {
+    document.querySelectorAll('.chain-step').forEach(el => {
+        el.className = 'chain-step';
+        el.querySelector('.status').textContent = 'Waiting...';
+    });
+}
+
+function logApiCall(type, url) {
+    apiCallCount++;
+    const log = document.getElementById('apiLog');
+    const shortUrl = url.length > 60 ? url.slice(0, 60) + '...' : url;
+    log.innerHTML = `<div class="api-call ${type}">
+        <div class="endpoint">${shortUrl}</div>
+        <div class="time">${new Date().toLocaleTimeString()}</div>
+    </div>` + log.innerHTML;
+}
+
+function showAnswer(result, tokens, corrections, thesaurus, startTime) {
+    const elapsed = Math.round(performance.now() - startTime);
+    
+    // Update stats
+    document.getElementById('statTokens').textContent = tokens.length;
+    document.getElementById('statApiCalls').textContent = apiCallCount;
+    document.getElementById('statCorrections').textContent = corrections.length;
+    document.getElementById('statLatency').textContent = elapsed + 'ms';
+    
+    // Render tokens
+    const tokensGrid = document.getElementById('tokensGrid');
+    tokensGrid.innerHTML = tokens.map(t => {
+        const cls = t.status === 'verified' ? 'dict-verified' :
+                   t.status === 'corrected' || t.status === 'alias' ? 'spell-fixed' :
+                   STOP_WORDS.has(t.resolved) ? 'dict-verified' : 'wiki-anchor';
+        const correction = t.original !== t.resolved ? 
+            `<div class="correction">${t.original} → ${t.resolved}</div>` : '';
+        
+        return `<div class="token ${cls}">
+            <div class="word">${t.resolved}</div>
+            <div class="info">${t.pos}${t.status === 'corrected' ? ' ⚡' : ''}</div>
+            ${correction}
+        </div>`;
+    }).join('');
+    
+    // Render thesaurus
+    const thesPanel = document.getElementById('thesaurusPanel');
+    const thesEntries = Object.entries(thesaurus);
+    if (thesEntries.length > 0) {
+        thesPanel.innerHTML = thesEntries.map(([word, syns]) => 
+            `<div class="thesaurus-row">
+                <span class="word">${word}</span>
+                <span class="syns">${syns.slice(0, 3).join(' • ')}</span>
+            </div>`
+        ).join('');
+    } else {
+        thesPanel.innerHTML = '<span style="color: var(--text-dim); font-size: 0.6rem;">No synonyms found</span>';
+    }
+    
+    // Render answer
+    const answerCard = document.getElementById('answerCard');
+    answerCard.classList.add('visible');
+    
+    if (result && result.text) {
+        document.getElementById('answerSource').innerHTML = '🌐 Wikipedia';
+        document.getElementById('answerSource').className = 'answer-source wikipedia';
+        document.getElementById('answerText').textContent = result.text;
+        document.getElementById('answerMeta').innerHTML = `
+            Source: <a href="${result.wikiUrl}" target="_blank">${result.title}</a> • 
+            ${apiCallCount} API calls • ${elapsed}ms
+        `;
+    } else {
+        document.getElementById('answerSource').innerHTML = '❌ Not Found';
+        document.getElementById('answerSource').className = 'answer-source';
+        document.getElementById('answerText').textContent = "I couldn't find information about that topic.";
+        document.getElementById('answerMeta').textContent = `${apiCallCount} API calls • ${elapsed}ms`;
+    }
+}
+
+function tryExample(q) {
+    document.getElementById('input').value = q;
+    processQuery();
+}
+
+// Handle Enter key
+document.getElementById('input').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        processQuery();
+    }
+});
+</script>
+</body>
+</html>
