@@ -255,7 +255,22 @@ const QUESTION_TYPES = {
             const subj = m[2].replace(/^(a|an|the)\s+/i, '');
             return [subj];
         },
-        answerKeywords: ['is', 'are', 'refers to', 'defined as', 'means'],
+        answerKeywords: (m) => {
+            const subj = m[2].toLowerCase();
+            const baseKeywords = ['is', 'are', 'refers to', 'defined as', 'means'];
+            
+            // Dynamic keywords based on subject
+            if (subj.includes('speed')) {
+                return [...baseKeywords, 'meters per second', 'm/s', 'km/h', 'mph', 'velocity', /\d+.*?(m\/s|km|meters|miles)/i, /299/];
+            }
+            if (subj.includes('capital')) {
+                return [...baseKeywords, 'capital', 'city', /\b[A-Z][a-z]+\b/];
+            }
+            if (subj.includes('population')) {
+                return [...baseKeywords, 'population', 'people', 'million', 'billion', /\d+/];
+            }
+            return baseKeywords;
+        },
         directArticle: (m) => m[2].replace(/^(a|an|the)\s+/i, '') // "speed of light" → try direct
     },
     
@@ -275,9 +290,26 @@ const QUESTION_TYPES = {
     
     WHY: {
         pattern: /^why\s+(is|are|do|does)\s+(.+)\??$/i,
-        buildQueries: (m) => [`why ${m[2]}`, m[2]],
-        answerKeywords: ['because', 'due to', 'caused by', 'reason', 'result of', 'scatter', 'wavelength'],
-        directArticle: null
+        buildQueries: (m) => {
+            const subj = m[2];
+            // Special case for common "why" questions
+            if (subj.match(/sky\s+blue/i)) {
+                return ['diffuse sky radiation', 'Rayleigh scattering', 'why is the sky blue', 'blue sky'];
+            }
+            return [`why ${subj}`, subj, `${subj} explanation`];
+        },
+        answerKeywords: (m) => {
+            const subj = m[2].toLowerCase();
+            if (subj.includes('sky') && subj.includes('blue')) {
+                return ['scatter', 'Rayleigh', 'wavelength', 'atmosphere', 'light', 'blue'];
+            }
+            return ['because', 'due to', 'caused by', 'reason', 'result of'];
+        },
+        directArticle: (m) => {
+            const subj = m[2].toLowerCase();
+            if (subj.match(/sky\s+blue/i)) return 'diffuse sky radiation';
+            return null;
+        }
     },
     
     WHERE: {
@@ -614,6 +646,8 @@ async function processQuery() {
         // STEP 4: Search with Snippet Scoring (if direct didn't work)
         setStepActive('search');
         if (!finalContent) {
+            let bestContentScore = 0;
+            
             for (const query of analysis.queries) {
                 debug(`Searching: "${query}"`);
                 const results = await wikiSearch(query);
@@ -630,27 +664,37 @@ async function processQuery() {
                 }));
                 scored.sort((a, b) => b.score - a.score);
                 
-                debug(`Top results: ${scored.slice(0, 3).map(r => `${r.title}(${r.score})`).join(', ')}`);
+                debug(`Results: ${scored.slice(0, 3).map(r => `${r.title}(snip:${r.score})`).join(', ')}`);
                 
-                // Pick best result that has decent score
-                const best = scored[0];
-                if (best.score > 0 || scored.length > 0) {
-                    const content = await wikiExtract(best.title);
-                    if (content && content.extract) {
-                        const { score, matches } = scoreContent(content.extract, analysis.answerKeywords);
-                        debug(`Article "${best.title}" content score: ${score}`);
-                        
-                        if (score >= 3 || !finalContent) {
-                            strategy = 'search';
-                            finalArticle = content.title;
-                            finalContent = content.extract;
-                            if (score >= 3) {
-                                debug(`✓ Found good match!`);
-                                break;
-                            }
-                        }
+                // Try top 3 results to find one with good content
+                for (const result of scored.slice(0, 3)) {
+                    const content = await wikiExtract(result.title);
+                    if (!content || !content.extract) continue;
+                    
+                    const { score: contentScore, matches } = scoreContent(content.extract, analysis.answerKeywords);
+                    debug(`"${result.title}" content score: ${contentScore} (${matches.slice(0, 3).join(', ') || 'no matches'})`);
+                    
+                    // Keep the best content we've found
+                    if (contentScore > bestContentScore) {
+                        bestContentScore = contentScore;
+                        finalArticle = content.title;
+                        finalContent = content.extract;
+                        strategy = 'search';
+                    }
+                    
+                    // If we found really good content, stop searching
+                    if (contentScore >= 8) {
+                        debug(`✓ Found excellent match!`);
+                        break;
                     }
                 }
+                
+                // If we found good content, stop trying more queries
+                if (bestContentScore >= 8) break;
+            }
+            
+            if (bestContentScore > 0) {
+                debug(`Best content score: ${bestContentScore}`);
             }
         }
         
