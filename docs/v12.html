@@ -33,7 +33,6 @@
             min-height: 100vh;
         }
         
-        /* Header */
         .header {
             padding: 1rem 2rem;
             background: var(--bg-card);
@@ -56,24 +55,11 @@
             font-size: 1.25rem; font-weight: 900; color: white;
         }
         
-        .header h1 {
-            font-size: 1.3rem;
-            font-weight: 700;
-            color: var(--text);
-        }
-        
+        .header h1 { font-size: 1.3rem; font-weight: 700; }
         .header h1 span { color: var(--cyan); }
+        .header .subtitle { font-size: 0.65rem; color: var(--text-dim); }
         
-        .header .subtitle {
-            font-size: 0.65rem;
-            color: var(--text-dim);
-        }
-        
-        .header-right {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
+        .header-right { display: flex; align-items: center; gap: 0.75rem; }
         
         .header-btn {
             padding: 0.5rem 1rem;
@@ -88,17 +74,7 @@
             transition: all 0.2s;
         }
         
-        .header-btn:hover {
-            background: var(--accent-light);
-            color: var(--accent);
-            border-color: var(--accent);
-        }
-        
-        .header-btn.active {
-            background: var(--accent);
-            color: white;
-            border-color: var(--accent);
-        }
+        .header-btn:hover { background: var(--accent-light); color: var(--accent); border-color: var(--accent); }
         
         .status-dot {
             width: 8px; height: 8px;
@@ -107,12 +83,8 @@
             animation: pulse 2s infinite;
         }
         
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
         
-        /* Main Layout */
         .main {
             display: grid;
             grid-template-columns: 1fr 360px;
@@ -122,11 +94,8 @@
             margin: 0 auto;
         }
         
-        @media (max-width: 1000px) {
-            .main { grid-template-columns: 1fr; }
-        }
+        @media (max-width: 1000px) { .main { grid-template-columns: 1fr; } }
         
-        /* Cards */
         .card {
             background: var(--bg-card);
             border: 1px solid var(--border);
@@ -147,7 +116,6 @@
             gap: 0.5rem;
         }
         
-        /* Input */
         .input-section { display: flex; flex-direction: column; gap: 1.25rem; }
         
         .input-card textarea {
@@ -162,7 +130,6 @@
             resize: none;
             min-height: 70px;
             outline: none;
-            transition: border-color 0.2s;
         }
         
         .input-card textarea:focus { border-color: var(--accent); }
@@ -174,24 +141,16 @@
             border: none;
             border-radius: 8px;
             color: white;
-            font-family: inherit;
             font-size: 0.85rem;
             font-weight: 600;
             cursor: pointer;
-            transition: opacity 0.2s, transform 0.1s;
             margin-top: 0.75rem;
         }
         
         .ask-btn:hover { opacity: 0.9; }
-        .ask-btn:active { transform: scale(0.99); }
         .ask-btn:disabled { opacity: 0.6; cursor: wait; }
         
-        .examples {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.4rem;
-            margin-top: 0.75rem;
-        }
+        .examples { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.75rem; }
         
         .examples button {
             padding: 0.35rem 0.7rem;
@@ -199,18 +158,12 @@
             border: 1px solid var(--border);
             border-radius: 6px;
             color: var(--text-dim);
-            font-family: inherit;
             font-size: 0.7rem;
             cursor: pointer;
-            transition: all 0.2s;
         }
         
-        .examples button:hover {
-            border-color: var(--accent);
-            color: var(--accent);
-        }
+        .examples button:hover { border-color: var(--accent); color: var(--accent); }
         
-        /* Tool Chain */
         .chain-steps { display: flex; flex-direction: column; gap: 0.4rem; }
         
         .chain-step {
@@ -221,7 +174,6 @@
             background: var(--bg-elevated);
             border-radius: 6px;
             border-left: 3px solid transparent;
-            transition: all 0.3s;
         }
         
         .chain-step.active { border-left-color: var(--cyan); background: var(--cyan-light); }
@@ -241,17 +193,11 @@
         .chain-step.complete .num { background: var(--success); color: white; }
         
         .chain-step .label { flex: 1; font-size: 0.7rem; font-weight: 600; }
-        .chain-step .status { font-size: 0.6rem; color: var(--text-dim); }
+        .chain-step .status { font-size: 0.6rem; color: var(--text-dim); max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .chain-step.active .status { color: var(--cyan); }
         .chain-step.complete .status { color: var(--success); }
         
-        /* Tokens */
-        .tokens-grid {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.4rem;
-            margin-top: 0.5rem;
-        }
+        .tokens-grid { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.5rem; }
         
         .token {
             padding: 0.4rem 0.5rem;
@@ -263,12 +209,21 @@
         .token.verified { background: var(--success-light); border-color: rgba(34,197,94,0.3); }
         .token.corrected { background: var(--warning-light); border-color: rgba(245,158,11,0.3); }
         .token.anchor { background: var(--cyan-light); border-color: rgba(6,182,212,0.3); }
-        .token.unknown { background: var(--bg-elevated); border-color: var(--border); }
         
         .token .word { font-weight: 600; }
-        .token .pos { font-size: 0.55rem; color: var(--text-dim); margin-top: 0.1rem; }
+        .token .info { font-size: 0.55rem; color: var(--text-dim); }
         
-        /* Answer */
+        .query-box {
+            background: var(--accent-light);
+            border: 1px solid rgba(59,130,246,0.2);
+            border-radius: 8px;
+            padding: 0.75rem;
+            margin-top: 0.75rem;
+        }
+        
+        .query-box .label { font-size: 0.65rem; font-weight: 600; color: var(--accent); }
+        .query-box .value { font-size: 0.8rem; color: var(--text); margin-top: 0.25rem; font-family: monospace; }
+        
         .answer-card {
             background: linear-gradient(135deg, var(--cyan-light), var(--accent-light));
             border: 1px solid rgba(6,182,212,0.2);
@@ -294,6 +249,7 @@
             font-size: 1rem;
             line-height: 1.7;
             color: var(--text);
+            white-space: pre-wrap;
         }
         
         .answer-meta {
@@ -305,22 +261,7 @@
         }
         
         .answer-meta a { color: var(--accent); text-decoration: none; }
-        .answer-meta a:hover { text-decoration: underline; }
         
-        /* Query Analysis */
-        .query-analysis {
-            background: var(--accent-light);
-            border: 1px solid rgba(59,130,246,0.2);
-            border-radius: 8px;
-            padding: 0.75rem;
-            margin-top: 0.75rem;
-            font-size: 0.7rem;
-        }
-        
-        .query-analysis .label { font-weight: 600; color: var(--accent); }
-        .query-analysis .value { color: var(--text); margin-left: 0.5rem; }
-        
-        /* Stats */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -337,19 +278,7 @@
         .stat .value { font-size: 1.25rem; font-weight: 700; color: var(--accent); }
         .stat .label { font-size: 0.55rem; color: var(--text-dim); text-transform: uppercase; }
         
-        /* Thesaurus */
-        .thesaurus-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 0.4rem 0.5rem;
-            background: var(--bg-elevated);
-            border-radius: 4px;
-            margin-bottom: 0.3rem;
-            font-size: 0.65rem;
-        }
-        
-        .thesaurus-row .word { font-weight: 600; color: var(--text); }
-        .thesaurus-row .syns { color: var(--purple); font-style: italic; }
+        .panel { display: flex; flex-direction: column; gap: 1rem; }
         
         /* Logs Modal */
         .logs-modal {
@@ -368,9 +297,10 @@
             background: var(--bg-card);
             border-radius: 12px;
             width: 90%;
-            max-width: 700px;
+            max-width: 800px;
             max-height: 80vh;
-            overflow: hidden;
+            display: flex;
+            flex-direction: column;
             box-shadow: 0 25px 50px rgba(0,0,0,0.25);
         }
         
@@ -380,9 +310,23 @@
             align-items: center;
             padding: 1rem 1.25rem;
             border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
         }
         
         .logs-header h3 { font-size: 0.9rem; font-weight: 700; }
+        
+        .logs-header-btns { display: flex; gap: 0.5rem; }
+        
+        .logs-copy-btn {
+            padding: 0.4rem 0.8rem;
+            background: var(--accent);
+            border: none;
+            border-radius: 6px;
+            color: white;
+            font-size: 0.7rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
         
         .logs-close {
             background: none;
@@ -394,8 +338,8 @@
         
         .logs-body {
             padding: 1rem;
-            max-height: calc(80vh - 60px);
             overflow-y: auto;
+            flex: 1;
         }
         
         .log-entry {
@@ -408,10 +352,9 @@
         }
         
         .log-entry.wiki { border-left-color: var(--cyan); }
-        .log-entry .url { color: var(--accent); word-break: break-all; }
+        .log-entry .url { color: var(--accent); word-break: break-all; font-family: monospace; font-size: 0.65rem; }
         .log-entry .time { color: var(--text-dim); font-size: 0.6rem; margin-top: 0.25rem; }
         
-        /* Spinner */
         .spinner {
             width: 14px; height: 14px;
             border: 2px solid var(--border);
@@ -422,9 +365,6 @@
         }
         
         @keyframes spin { to { transform: rotate(360deg); } }
-        
-        /* Panel */
-        .panel { display: flex; flex-direction: column; gap: 1rem; }
     </style>
 </head>
 <body>
@@ -439,68 +379,44 @@
         <div class="header-right">
             <a href="index.html" class="header-btn">← v1.1 Local</a>
             <button class="header-btn" onclick="toggleLogs()">📋 Logs</button>
-            <div class="status-dot" title="World Knowledge Active"></div>
+            <div class="status-dot" title="Active"></div>
         </div>
     </header>
     
     <div class="main">
         <div class="input-section">
             <div class="card input-card">
-                <textarea id="input" placeholder="Ask anything about the world..." spellcheck="false">What is the speed of electricity?</textarea>
+                <textarea id="input" placeholder="Ask anything about the world..." spellcheck="false">How fast do birds fly?</textarea>
                 <button class="ask-btn" id="askBtn" onclick="processQuery()">🌐 Ask World Knowledge</button>
                 <div class="examples">
                     <button onclick="tryExample('What is quantum mechanics?')">Quantum mechanics</button>
+                    <button onclick="tryExample('How fast do birds fly?')">Bird speed</button>
                     <button onclick="tryExample('How many legs does a dog have?')">Dog legs</button>
                     <button onclick="tryExample('wat is teh captial of Frace?')">Typos test</button>
                     <button onclick="tryExample('Why is the sky blue?')">Sky color</button>
-                    <button onclick="tryExample('What is photosynthesis?')">Photosynthesis</button>
+                    <button onclick="tryExample('Who invented the telephone?')">Telephone</button>
                 </div>
             </div>
             
             <div class="card">
-                <div class="card-title">⚙️ Tool Chain Pipeline</div>
+                <div class="card-title">⚙️ Pipeline</div>
                 <div class="chain-steps" id="chainSteps">
-                    <div class="chain-step" data-step="tokenize">
-                        <div class="num">1</div>
-                        <div class="label">Tokenize</div>
-                        <div class="status">—</div>
-                    </div>
-                    <div class="chain-step" data-step="analyze">
-                        <div class="num">2</div>
-                        <div class="label">Question Analysis</div>
-                        <div class="status">—</div>
-                    </div>
-                    <div class="chain-step" data-step="dictionary">
-                        <div class="num">3</div>
-                        <div class="label">Dictionary + Spelling</div>
-                        <div class="status">—</div>
-                    </div>
-                    <div class="chain-step" data-step="semantic">
-                        <div class="num">4</div>
-                        <div class="label">Semantic Query Build</div>
-                        <div class="status">—</div>
-                    </div>
-                    <div class="chain-step" data-step="wikipedia">
-                        <div class="num">5</div>
-                        <div class="label">Wikipedia RAG</div>
-                        <div class="status">—</div>
-                    </div>
-                    <div class="chain-step" data-step="collapse">
-                        <div class="num">6</div>
-                        <div class="label">ITT Collapse</div>
-                        <div class="status">—</div>
-                    </div>
+                    <div class="chain-step" data-step="correct"><div class="num">1</div><div class="label">Spell Check</div><div class="status">—</div></div>
+                    <div class="chain-step" data-step="analyze"><div class="num">2</div><div class="label">Question Analysis</div><div class="status">—</div></div>
+                    <div class="chain-step" data-step="search"><div class="num">3</div><div class="label">Wikipedia Search</div><div class="status">—</div></div>
+                    <div class="chain-step" data-step="extract"><div class="num">4</div><div class="label">Content Extract</div><div class="status">—</div></div>
+                    <div class="chain-step" data-step="synthesize"><div class="num">5</div><div class="label">Answer Synthesis</div><div class="status">—</div></div>
                 </div>
             </div>
             
             <div class="card">
-                <div class="card-title">🔤 Token Resolution</div>
+                <div class="card-title">🔤 Resolution</div>
                 <div class="tokens-grid" id="tokensGrid">
-                    <span style="color: var(--text-dim); font-size: 0.75rem;">Process a query to see analysis...</span>
+                    <span style="color: var(--text-dim); font-size: 0.75rem;">Process a query...</span>
                 </div>
-                <div class="query-analysis" id="queryAnalysis" style="display: none;">
-                    <span class="label">Search Query:</span>
-                    <span class="value" id="searchQuery"></span>
+                <div class="query-box" id="queryBox" style="display: none;">
+                    <div class="label">Search Query</div>
+                    <div class="value" id="searchQuery"></div>
                 </div>
             </div>
             
@@ -515,49 +431,34 @@
             <div class="card">
                 <div class="card-title">📊 Stats</div>
                 <div class="stats-grid">
-                    <div class="stat">
-                        <div class="value" id="statTokens">0</div>
-                        <div class="label">Tokens</div>
-                    </div>
-                    <div class="stat">
-                        <div class="value" id="statApi">0</div>
-                        <div class="label">API Calls</div>
-                    </div>
-                    <div class="stat">
-                        <div class="value" id="statFixes">0</div>
-                        <div class="label">Corrections</div>
-                    </div>
-                    <div class="stat">
-                        <div class="value" id="statTime">0ms</div>
-                        <div class="label">Time</div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="card">
-                <div class="card-title">📖 Thesaurus</div>
-                <div id="thesaurusPanel">
-                    <span style="color: var(--text-dim); font-size: 0.65rem;">Synonyms appear here...</span>
+                    <div class="stat"><div class="value" id="statApi">0</div><div class="label">API Calls</div></div>
+                    <div class="stat"><div class="value" id="statTime">0ms</div><div class="label">Time</div></div>
+                    <div class="stat"><div class="value" id="statType">—</div><div class="label">Q-Type</div></div>
+                    <div class="stat"><div class="value" id="statFixes">0</div><div class="label">Fixes</div></div>
                 </div>
             </div>
             
             <div class="card" style="background: linear-gradient(135deg, var(--accent-light), rgba(139,92,246,0.1));">
-                <div class="card-title" style="color: var(--accent);">💡 v1.2 Protocol</div>
+                <div class="card-title" style="color: var(--accent);">💡 v1.2.2 Protocol</div>
                 <p style="font-size: 0.7rem; line-height: 1.6; color: var(--text-dim);">
-                    <strong style="color: var(--text);">Question Analysis</strong> detects intent (what/how/why) and constructs optimal Wikipedia search query.
-                    <br><br>
-                    The query <strong style="color: var(--accent);">becomes</strong> the URL. No pre-training needed.
+                    <strong>1.</strong> Correct spelling first<br>
+                    <strong>2.</strong> Detect question TYPE (how fast, how many, what is...)<br>
+                    <strong>3.</strong> Build OPTIMAL search query<br>
+                    <strong>4.</strong> Fetch Wikipedia content<br>
+                    <strong>5.</strong> SYNTHESIZE answer (extract relevant info)
                 </p>
             </div>
         </div>
     </div>
     
-    <!-- Logs Modal -->
     <div class="logs-modal" id="logsModal">
         <div class="logs-content">
             <div class="logs-header">
                 <h3>📋 API Calls Log</h3>
-                <button class="logs-close" onclick="toggleLogs()">×</button>
+                <div class="logs-header-btns">
+                    <button class="logs-copy-btn" onclick="copyLogs()">📋 Copy All</button>
+                    <button class="logs-close" onclick="toggleLogs()">×</button>
+                </div>
             </div>
             <div class="logs-body" id="logsBody">
                 <p style="color: var(--text-dim); font-size: 0.75rem;">No API calls yet...</p>
@@ -567,8 +468,7 @@
 
 <script>
 // =========================================================================
-// imagineAI v1.2.1 - Dynamic World Knowledge
-// With Question-Type Detection and Semantic Query Construction
+// imagineAI v1.2.2 - Smarter Search + Response Synthesis
 // =========================================================================
 
 const USER_AGENT = 'imagineAI/1.2 (https://intent-tensor-theory.github.io/git_0.0_imagineAI/)';
@@ -576,177 +476,159 @@ let apiLogs = [];
 let apiCallCount = 0;
 
 // =========================================================================
-// QUESTION TYPE DETECTION
+// ALIASES for quick spelling fixes
 // =========================================================================
-const QUESTION_PATTERNS = {
-    // "What is X" → search for X definition
-    DEFINITION: /^what\s+(is|are|was|were)\s+(.+)/i,
-    // "How many X does Y have" → search for "Y anatomy" or "Y characteristics"
-    COUNT: /^how\s+many\s+(\w+)\s+(does|do|did)\s+(?:a\s+)?(\w+)\s+have/i,
-    // "How fast/tall/big is X" → search for "X speed/height/size"
-    MEASUREMENT: /^how\s+(fast|slow|tall|big|small|heavy|long|old|far)\s+(is|are|does)\s+(.+)/i,
-    // "Why is X Y" → search for "X Y explanation"
-    WHY: /^why\s+(is|are|do|does|did)\s+(.+)/i,
-    // "Who invented/discovered/created X" → search for "X history" or "X inventor"
-    WHO: /^who\s+(invented|discovered|created|founded|wrote|painted)\s+(.+)/i,
-    // "Where is X" → search for "X location"
-    WHERE: /^where\s+(is|are|was|were)\s+(.+)/i,
-    // "What is the X of Y" → search for "Y X"
-    PROPERTY: /^what\s+is\s+the\s+(\w+)\s+of\s+(.+)/i,
-    // "What is the largest/smallest X" → search for "largest X"
-    SUPERLATIVE: /^what\s+is\s+the\s+(largest|smallest|biggest|tallest|fastest|longest|deepest|oldest|highest)\s+(.+)/i,
+const ALIASES = {
+    'u': 'you', 'r': 'are', 'ur': 'your', 'teh': 'the', 'thier': 'their',
+    'wat': 'what', 'wut': 'what', 'wher': 'where', 'wen': 'when',
+    'captial': 'capital', 'capitol': 'capital', 'bigest': 'biggest',
+    'frace': 'france', 'planit': 'planet', 'mountan': 'mountain',
+    'eclectiry': 'electricity', 'eceltricty': 'electricity'
 };
 
-const MEASUREMENT_TERMS = {
-    'fast': 'speed',
-    'slow': 'speed',
-    'tall': 'height',
-    'big': 'size',
-    'small': 'size',
-    'heavy': 'weight',
-    'long': 'length',
-    'old': 'age',
-    'far': 'distance'
+// =========================================================================
+// QUESTION TYPE PATTERNS - The key to semantic understanding
+// =========================================================================
+const QUESTION_TYPES = {
+    // "How fast do X verb" → "X verb speed" or "fastest X"
+    SPEED_DO: {
+        pattern: /^how\s+(fast|quick|quickly)\s+(do|does|can)\s+(.+?)\s+(fly|run|swim|move|travel|go)\??$/i,
+        buildQuery: (m) => `${m[3]} ${m[4]} speed`,
+        keywords: ['speed', 'velocity', 'mph', 'km/h', 'fastest']
+    },
+    // "How fast is X" → "X speed"
+    SPEED_IS: {
+        pattern: /^how\s+(fast|quick)\s+(is|are)\s+(.+)\??$/i,
+        buildQuery: (m) => `${m[3]} speed`,
+        keywords: ['speed', 'velocity', 'fast']
+    },
+    // "How many X does Y have" → "Y X" or "Y anatomy"
+    COUNT_HAVE: {
+        pattern: /^how\s+many\s+(\w+)\s+(does|do)\s+(?:a\s+)?(\w+)\s+have\??$/i,
+        buildQuery: (m) => `${m[3]} ${m[1]}`,
+        keywords: ['number', 'count', m => m[1]]
+    },
+    // "How many X in Y" → "number of X in Y"
+    COUNT_IN: {
+        pattern: /^how\s+many\s+(.+?)\s+(in|on|at)\s+(.+)\??$/i,
+        buildQuery: (m) => `number of ${m[1]} ${m[2]} ${m[3]}`,
+        keywords: ['number', 'count', 'total']
+    },
+    // "How much X does Y verb" → "Y X consumption/amount"
+    QUANTITY: {
+        pattern: /^how\s+much\s+(\w+)\s+(do|does)\s+(.+?)\s+(drink|eat|consume|use|need)\??$/i,
+        buildQuery: (m) => `${m[3]} ${m[1]} ${m[4]} amount`,
+        keywords: ['amount', 'consumption', m => m[1], 'per day', 'daily']
+    },
+    // "What is X" → X
+    DEFINITION: {
+        pattern: /^what\s+(is|are|was|were)\s+(.+)\??$/i,
+        buildQuery: (m) => m[2],
+        keywords: ['is', 'are', 'defined', 'means']
+    },
+    // "What is the X of Y" → "Y X"
+    PROPERTY: {
+        pattern: /^what\s+is\s+the\s+(\w+)\s+of\s+(.+)\??$/i,
+        buildQuery: (m) => `${m[2]} ${m[1]}`,
+        keywords: [m => m[1]]
+    },
+    // "Who invented X" → "X inventor" or "invention of X"
+    WHO_INVENTED: {
+        pattern: /^who\s+(invented|discovered|created|founded|built|designed)\s+(.+)\??$/i,
+        buildQuery: (m) => `${m[2]} ${m[1]} inventor`,
+        keywords: ['invented', 'created', 'inventor', 'founder']
+    },
+    // "Why is X Y" → "why X Y" or "X Y explanation"
+    WHY: {
+        pattern: /^why\s+(is|are|do|does)\s+(.+)\??$/i,
+        buildQuery: (m) => `why ${m[2]}`,
+        keywords: ['because', 'reason', 'due to', 'caused']
+    },
+    // "Where is X" → "X location"
+    WHERE: {
+        pattern: /^where\s+(is|are)\s+(.+)\??$/i,
+        buildQuery: (m) => `${m[2]} location`,
+        keywords: ['located', 'location', 'found', 'situated']
+    },
+    // Superlatives: "What is the largest X"
+    SUPERLATIVE: {
+        pattern: /^what\s+is\s+the\s+(largest|biggest|smallest|tallest|fastest|longest|deepest|highest|oldest)\s+(.+)\??$/i,
+        buildQuery: (m) => `${m[1]} ${m[2]}`,
+        keywords: [m => m[1]]
+    }
 };
 
-function analyzeQuestion(text) {
-    const clean = text.toLowerCase().replace(/[?!.,]/g, '').trim();
-    
-    // Check each pattern
-    for (const [type, pattern] of Object.entries(QUESTION_PATTERNS)) {
-        const match = clean.match(pattern);
-        if (match) {
-            return { type, match, raw: clean };
-        }
-    }
-    
-    return { type: 'GENERAL', match: null, raw: clean };
-}
-
-function buildSearchQuery(analysis, tokens) {
-    const { type, match, raw } = analysis;
-    
-    switch (type) {
-        case 'DEFINITION':
-            // "what is X" → search for X
-            return match[2];
-            
-        case 'COUNT':
-            // "how many legs does a dog have" → "dog anatomy"
-            const countItem = match[1];  // legs
-            const countSubject = match[3];  // dog
-            return `${countSubject} ${countItem} anatomy`;
-            
-        case 'MEASUREMENT':
-            // "how fast is electricity" → "electricity speed"
-            const measureType = MEASUREMENT_TERMS[match[1]] || match[1];
-            const measureSubject = match[3];
-            return `${measureSubject} ${measureType}`;
-            
-        case 'WHY':
-            // "why is the sky blue" → "sky blue explanation physics"
-            return `${match[2]} explanation`;
-            
-        case 'WHO':
-            // "who invented the telephone" → "telephone inventor"
-            return `${match[2]} ${match[1]}`;
-            
-        case 'WHERE':
-            // "where is Mount Everest" → "Mount Everest location"
-            return `${match[2]} location`;
-            
-        case 'PROPERTY':
-            // "what is the capital of France" → "France capital"
-            return `${match[2]} ${match[1]}`;
-            
-        case 'SUPERLATIVE':
-            // "what is the largest planet" → "largest planet"
-            return `${match[1]} ${match[2]}`;
-            
-        default:
-            // Fallback: extract content words
-            const stopWords = new Set(['what', 'is', 'are', 'the', 'a', 'an', 'of', 'in', 'on', 'how', 'does', 'do', 'did', 'was', 'were', 'have', 'has', 'many']);
-            const words = raw.split(/\s+/).filter(w => w.length > 2 && !stopWords.has(w));
-            return words.join(' ');
-    }
-}
-
 // =========================================================================
-// DICTIONARY API (Datamuse)
+// CORRECT SPELLING - Quick alias lookup + Datamuse API
 // =========================================================================
-async function dictLookup(word) {
-    const url = `https://api.datamuse.com/words?sp=${word}&md=p&max=1`;
-    logApi('dict', url);
+async function correctText(text) {
+    const words = text.toLowerCase().replace(/[?!.,]/g, ' ').split(/\s+/).filter(w => w);
+    const corrected = [];
+    const fixes = [];
     
-    try {
-        const res = await fetch(url);
-        const data = await res.json();
-        
-        if (data.length > 0 && data[0].word === word) {
-            return { exists: true, word: data[0].word, pos: parsePOS(data[0].tags) };
-        }
-        return { exists: false, word };
-    } catch (e) {
-        return { exists: false, word };
-    }
-}
-
-async function spellCheck(word) {
-    const url = `https://api.datamuse.com/words?sp=${word}*&max=5`;
-    logApi('dict', url);
-    
-    try {
-        const res = await fetch(url);
-        const data = await res.json();
-        
-        if (data.length > 0) {
-            let best = data[0].word;
-            let bestDist = levenshtein(word, best);
-            
-            for (const d of data) {
-                const dist = levenshtein(word, d.word);
-                if (dist < bestDist) {
-                    bestDist = dist;
-                    best = d.word;
+    for (const word of words) {
+        // Check aliases first (instant)
+        if (ALIASES[word]) {
+            corrected.push(ALIASES[word]);
+            fixes.push({ from: word, to: ALIASES[word] });
+        } else {
+            // Check if word exists via Datamuse
+            const exists = await wordExists(word);
+            if (exists) {
+                corrected.push(word);
+            } else {
+                // Try to find correction
+                const fixed = await findCorrection(word);
+                corrected.push(fixed);
+                if (fixed !== word) {
+                    fixes.push({ from: word, to: fixed });
                 }
             }
-            
-            if (bestDist <= 2 && best !== word) {
-                return { word: best, corrected: true };
-            }
         }
-        return { word, corrected: false };
-    } catch (e) {
-        return { word, corrected: false };
     }
+    
+    return {
+        original: text,
+        corrected: corrected.join(' '),
+        tokens: corrected,
+        fixes
+    };
 }
 
-async function thesaurusLookup(word) {
-    const url = `https://api.datamuse.com/words?rel_syn=${word}&max=5`;
+async function wordExists(word) {
+    if (word.length <= 2) return true; // Skip short words
+    const url = `https://api.datamuse.com/words?sp=${word}&max=1`;
     logApi('dict', url);
-    
     try {
         const res = await fetch(url);
         const data = await res.json();
-        return data.map(d => d.word);
-    } catch (e) {
-        return [];
-    }
+        return data.length > 0 && data[0].word === word;
+    } catch { return true; }
 }
 
-function parsePOS(tags) {
-    if (!tags) return 'UNKNOWN';
-    for (const t of tags) {
-        if (t.startsWith('n')) return 'NOUN';
-        if (t.startsWith('v')) return 'VERB';
-        if (t.startsWith('adj')) return 'ADJ';
-        if (t.startsWith('adv')) return 'ADV';
-    }
-    return 'UNKNOWN';
+async function findCorrection(word) {
+    if (word.length <= 2) return word;
+    const url = `https://api.datamuse.com/words?sp=${word}*&max=5`;
+    logApi('dict', url);
+    try {
+        const res = await fetch(url);
+        const data = await res.json();
+        if (data.length > 0) {
+            // Find closest by Levenshtein
+            let best = data[0].word;
+            let bestDist = levenshtein(word, best);
+            for (const d of data) {
+                const dist = levenshtein(word, d.word);
+                if (dist < bestDist) { bestDist = dist; best = d.word; }
+            }
+            if (bestDist <= 2) return best;
+        }
+    } catch {}
+    return word;
 }
 
 function levenshtein(s, t) {
-    if (!s) return t ? t.length : 0;
+    if (!s) return t?.length || 0;
     if (!t) return s.length;
     const m = s.length, n = t.length;
     let prev = Array.from({length: n + 1}, (_, i) => i);
@@ -762,69 +644,105 @@ function levenshtein(s, t) {
 }
 
 // =========================================================================
+// ANALYZE QUESTION - Detect type and build optimal search query
+// =========================================================================
+function analyzeQuestion(correctedText) {
+    for (const [type, config] of Object.entries(QUESTION_TYPES)) {
+        const match = correctedText.match(config.pattern);
+        if (match) {
+            return {
+                type,
+                match,
+                searchQuery: config.buildQuery(match),
+                keywords: config.keywords.map(k => typeof k === 'function' ? k(match) : k)
+            };
+        }
+    }
+    
+    // Fallback: extract content words
+    const stopWords = new Set(['what', 'is', 'are', 'the', 'a', 'an', 'of', 'in', 'on', 'how', 'does', 'do', 'many', 'much', 'have', 'has', 'can', 'will']);
+    const words = correctedText.split(/\s+/).filter(w => w.length > 2 && !stopWords.has(w));
+    
+    return {
+        type: 'GENERAL',
+        match: null,
+        searchQuery: words.join(' '),
+        keywords: words
+    };
+}
+
+// =========================================================================
 // WIKIPEDIA API
 // =========================================================================
 async function wikiSearch(query) {
     const url = `https://en.wikipedia.org/w/api.php?` + new URLSearchParams({
-        action: 'query',
-        list: 'search',
-        srsearch: query,
-        format: 'json',
-        origin: '*',
-        srlimit: 5
+        action: 'query', list: 'search', srsearch: query,
+        format: 'json', origin: '*', srlimit: 5
     });
-    
     logApi('wiki', url);
-    
     try {
         const res = await fetch(url, { headers: { 'Api-User-Agent': USER_AGENT } });
         const data = await res.json();
         return data.query?.search || [];
-    } catch (e) {
-        console.error('Wiki search error:', e);
-        return [];
-    }
+    } catch { return []; }
 }
 
 async function wikiExtract(title) {
     const url = `https://en.wikipedia.org/w/api.php?` + new URLSearchParams({
-        action: 'query',
-        prop: 'extracts',
-        exintro: '1',
-        explaintext: '1',
-        titles: title,
-        format: 'json',
-        origin: '*'
+        action: 'query', prop: 'extracts', exintro: '1', explaintext: '1',
+        titles: title, format: 'json', origin: '*'
     });
-    
     logApi('wiki', url);
-    
     try {
         const res = await fetch(url, { headers: { 'Api-User-Agent': USER_AGENT } });
         const data = await res.json();
         const pages = data.query?.pages || {};
         const pageId = Object.keys(pages)[0];
-        
         if (pageId === '-1') return null;
-        
-        return {
-            title: pages[pageId].title,
-            extract: pages[pageId].extract || ''
-        };
-    } catch (e) {
-        console.error('Wiki extract error:', e);
-        return null;
-    }
+        return { title: pages[pageId].title, extract: pages[pageId].extract || '' };
+    } catch { return null; }
 }
 
 // =========================================================================
-// ALIASES
+// SYNTHESIZE ANSWER - Extract relevant sentences based on keywords
 // =========================================================================
-const ALIASES = {
-    'u': 'you', 'r': 'are', 'ur': 'your', 'teh': 'the',
-    'wat': 'what', 'wut': 'what', 'wher': 'where',
-    'captial': 'capital', 'bigest': 'biggest', 'frace': 'france'
-};
+function synthesizeAnswer(extract, analysis) {
+    if (!extract) return "Couldn't find relevant information.";
+    
+    // Split into sentences
+    const sentences = extract.match(/[^.!?]+[.!?]+/g) || [extract];
+    if (sentences.length === 0) return extract;
+    
+    const keywords = analysis.keywords.filter(k => k && typeof k === 'string');
+    
+    // Score sentences by keyword matches
+    const scored = sentences.map((s, idx) => {
+        const sLower = s.toLowerCase();
+        let score = 0;
+        
+        // Keyword matches
+        for (const kw of keywords) {
+            if (sLower.includes(kw.toLowerCase())) score += 3;
+        }
+        
+        // Check for numbers (often contain answers)
+        if (/\d/.test(s)) score += 1;
+        
+        // Position bonus (intro often has key info)
+        if (idx < 2) score += 2;
+        
+        return { sentence: s.trim(), score, idx };
+    });
+    
+    // Sort by score, take top sentences
+    scored.sort((a, b) => b.score - a.score);
+    
+    // Get top 2-3 sentences, maintain original order
+    const topIndices = scored.slice(0, 3).map(s => s.idx).sort((a, b) => a - b);
+    const result = topIndices.map(i => sentences[i].trim()).join(' ');
+    
+    return result || sentences[0];
+}
 
 // =========================================================================
 // MAIN PIPELINE
@@ -842,92 +760,63 @@ async function processQuery() {
     document.getElementById('askBtn').innerHTML = '<span class="spinner"></span> Processing...';
     
     try {
-        // STEP 1: Tokenize
-        setStepActive('tokenize');
-        const rawTokens = input.toLowerCase().replace(/[?!.,]/g, '').split(/\s+/).filter(x => x);
-        setStepComplete('tokenize', `${rawTokens.length} tokens`);
+        // STEP 1: Correct spelling
+        setStepActive('correct');
+        const corrected = await correctText(input);
+        setStepComplete('correct', corrected.fixes.length > 0 ? `${corrected.fixes.length} fixed` : 'OK');
         
-        // STEP 2: Question Analysis
+        // STEP 2: Analyze question
         setStepActive('analyze');
-        const analysis = analyzeQuestion(input);
+        const analysis = analyzeQuestion(corrected.corrected);
         setStepComplete('analyze', analysis.type);
         
-        // STEP 3: Dictionary + Spelling
-        setStepActive('dictionary');
-        const tokens = [];
-        const corrections = [];
-        
-        for (const raw of rawTokens) {
-            if (ALIASES[raw]) {
-                tokens.push({ original: raw, resolved: ALIASES[raw], status: 'corrected', pos: '—' });
-                corrections.push({ from: raw, to: ALIASES[raw] });
-                continue;
-            }
-            
-            const dict = await dictLookup(raw);
-            if (dict.exists) {
-                tokens.push({ original: raw, resolved: raw, status: 'verified', pos: dict.pos });
-            } else {
-                const spell = await spellCheck(raw);
-                if (spell.corrected) {
-                    tokens.push({ original: raw, resolved: spell.word, status: 'corrected', pos: '—' });
-                    corrections.push({ from: raw, to: spell.word });
-                } else {
-                    tokens.push({ original: raw, resolved: raw, status: 'unknown', pos: '—' });
-                }
-            }
-        }
-        setStepComplete('dictionary', `${corrections.length} fixes`);
-        
-        // STEP 4: Semantic Query Build
-        setStepActive('semantic');
-        const searchQuery = buildSearchQuery(analysis, tokens);
-        setStepComplete('semantic', `"${searchQuery}"`);
-        
-        // Get thesaurus for key terms
-        const thesaurusData = {};
-        const keyWords = searchQuery.split(' ').filter(w => w.length > 3).slice(0, 3);
-        for (const w of keyWords) {
-            const syns = await thesaurusLookup(w);
-            if (syns.length > 0) thesaurusData[w] = syns;
-        }
-        
-        // STEP 5: Wikipedia RAG
-        setStepActive('wikipedia');
-        const results = await wikiSearch(searchQuery);
+        // STEP 3: Search Wikipedia
+        setStepActive('search');
+        const results = await wikiSearch(analysis.searchQuery);
         
         if (results.length === 0) {
-            setStepError('wikipedia', 'No results');
-            showAnswer(null, tokens, corrections, thesaurusData, searchQuery, startTime);
+            setStepError('search', 'No results');
+            showAnswer(null, corrected, analysis, startTime);
             return;
         }
         
-        // Get best result (prefer exact title match)
+        // Pick best result (prefer title that matches key terms)
         let bestResult = results[0];
+        const queryWords = analysis.searchQuery.toLowerCase().split(' ');
         for (const r of results) {
-            if (r.title.toLowerCase().includes(searchQuery.split(' ')[0])) {
+            const titleLower = r.title.toLowerCase();
+            const matches = queryWords.filter(w => titleLower.includes(w)).length;
+            if (matches > queryWords.filter(w => bestResult.title.toLowerCase().includes(w)).length) {
                 bestResult = r;
-                break;
             }
         }
+        setStepComplete('search', bestResult.title);
         
+        // STEP 4: Extract content
+        setStepActive('extract');
         const content = await wikiExtract(bestResult.title);
-        setStepComplete('wikipedia', `"${bestResult.title}"`);
+        if (!content) {
+            setStepError('extract', 'Failed');
+            showAnswer(null, corrected, analysis, startTime);
+            return;
+        }
+        setStepComplete('extract', `${content.extract.length} chars`);
         
-        // STEP 6: ITT Collapse
-        setStepActive('collapse');
-        const answer = content?.extract || "Couldn't extract content.";
-        setStepComplete('collapse', 'Complete');
+        // STEP 5: Synthesize answer
+        setStepActive('synthesize');
+        const answer = synthesizeAnswer(content.extract, analysis);
+        setStepComplete('synthesize', 'Done');
         
         showAnswer({
             text: answer,
-            title: content?.title,
-            url: `https://en.wikipedia.org/wiki/${encodeURIComponent(content?.title || '')}`
-        }, tokens, corrections, thesaurusData, searchQuery, startTime);
+            fullText: content.extract,
+            title: content.title,
+            url: `https://en.wikipedia.org/wiki/${encodeURIComponent(content.title)}`
+        }, corrected, analysis, startTime);
         
     } catch (e) {
         console.error('Pipeline error:', e);
-        showAnswer(null, [], [], {}, '', startTime);
+        showAnswer(null, { tokens: [], fixes: [] }, { type: 'ERROR', searchQuery: '' }, startTime);
     } finally {
         document.getElementById('askBtn').disabled = false;
         document.getElementById('askBtn').innerHTML = '🌐 Ask World Knowledge';
@@ -969,69 +858,66 @@ function logApi(type, url) {
 }
 
 function updateLogsModal() {
-    const body = document.getElementById('logsBody');
-    body.innerHTML = apiLogs.map(log => `
+    document.getElementById('logsBody').innerHTML = apiLogs.map(log => `
         <div class="log-entry ${log.type}">
             <div class="url">${log.url}</div>
             <div class="time">${log.time}</div>
         </div>
-    `).join('');
+    `).join('') || '<p style="color: var(--text-dim);">No logs</p>';
 }
 
 function toggleLogs() {
     document.getElementById('logsModal').classList.toggle('visible');
 }
 
-function showAnswer(result, tokens, corrections, thesaurus, searchQuery, startTime) {
+function copyLogs() {
+    const text = apiLogs.map(l => `[${l.time}] ${l.url}`).join('\n');
+    navigator.clipboard.writeText(text).then(() => {
+        alert('Logs copied to clipboard!');
+    });
+}
+
+function showAnswer(result, corrected, analysis, startTime) {
     const elapsed = Math.round(performance.now() - startTime);
     
     // Stats
-    document.getElementById('statTokens').textContent = tokens.length;
     document.getElementById('statApi').textContent = apiCallCount;
-    document.getElementById('statFixes').textContent = corrections.length;
     document.getElementById('statTime').textContent = elapsed + 'ms';
+    document.getElementById('statType').textContent = analysis.type;
+    document.getElementById('statFixes').textContent = corrected.fixes?.length || 0;
     
     // Tokens
-    const stopWords = new Set(['what', 'is', 'are', 'the', 'a', 'an', 'of', 'in', 'on', 'how', 'does', 'do', 'many', 'have', 'has']);
-    document.getElementById('tokensGrid').innerHTML = tokens.map(t => {
-        const isAnchor = !stopWords.has(t.resolved) && t.resolved.length > 2;
-        const cls = t.status === 'corrected' ? 'corrected' : 
-                   isAnchor ? 'anchor' : 'verified';
-        const fix = t.original !== t.resolved ? ` ⚡${t.original}` : '';
-        return `<div class="token ${cls}">
-            <div class="word">${t.resolved}${fix}</div>
-            <div class="pos">${t.pos}</div>
-        </div>`;
-    }).join('');
+    const stopWords = new Set(['what', 'is', 'are', 'the', 'a', 'an', 'of', 'in', 'on', 'how', 'does', 'do', 'many', 'have']);
+    document.getElementById('tokensGrid').innerHTML = corrected.tokens?.map(t => {
+        const isFix = corrected.fixes?.some(f => f.to === t);
+        const isAnchor = !stopWords.has(t) && t.length > 2;
+        const cls = isFix ? 'corrected' : isAnchor ? 'anchor' : 'verified';
+        const fixFrom = corrected.fixes?.find(f => f.to === t)?.from;
+        const fixInfo = fixFrom ? ` ⚡${fixFrom}` : '';
+        return `<div class="token ${cls}"><span class="word">${t}${fixInfo}</span></div>`;
+    }).join('') || '<span style="color: var(--text-dim);">—</span>';
     
     // Search query
-    document.getElementById('queryAnalysis').style.display = 'block';
-    document.getElementById('searchQuery').textContent = `"${searchQuery}"`;
-    
-    // Thesaurus
-    const thesPanel = document.getElementById('thesaurusPanel');
-    const entries = Object.entries(thesaurus);
-    if (entries.length > 0) {
-        thesPanel.innerHTML = entries.map(([w, syns]) =>
-            `<div class="thesaurus-row">
-                <span class="word">${w}</span>
-                <span class="syns">${syns.slice(0, 3).join(' • ')}</span>
-            </div>`
-        ).join('');
-    } else {
-        thesPanel.innerHTML = '<span style="color: var(--text-dim); font-size: 0.65rem;">No synonyms found</span>';
-    }
+    document.getElementById('queryBox').style.display = 'block';
+    document.getElementById('searchQuery').textContent = `"${analysis.searchQuery}"`;
     
     // Answer
     const card = document.getElementById('answerCard');
     card.classList.add('visible');
     
-    if (result && result.text) {
+    if (result?.text) {
         document.getElementById('answerSource').innerHTML = '🌐 Wikipedia';
         document.getElementById('answerText').textContent = result.text;
         document.getElementById('answerMeta').innerHTML = `
             Source: <a href="${result.url}" target="_blank">${result.title}</a> • 
             ${apiCallCount} API calls • ${elapsed}ms
+            <br><br>
+            <details style="margin-top: 0.5rem;">
+                <summary style="cursor: pointer; color: var(--accent);">Show full Wikipedia extract</summary>
+                <p style="margin-top: 0.5rem; padding: 0.75rem; background: var(--bg-elevated); border-radius: 6px; font-size: 0.8rem; line-height: 1.6;">
+                    ${result.fullText}
+                </p>
+            </details>
         `;
     } else {
         document.getElementById('answerSource').innerHTML = '❌ Not Found';
@@ -1045,15 +931,10 @@ function tryExample(q) {
     processQuery();
 }
 
-// Enter key
 document.getElementById('input').addEventListener('keypress', (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        processQuery();
-    }
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); processQuery(); }
 });
 
-// Close modal on outside click
 document.getElementById('logsModal').addEventListener('click', (e) => {
     if (e.target.id === 'logsModal') toggleLogs();
 });
