@@ -6,364 +6,90 @@
     <title>imagineAI v1.2 - Dynamic World Knowledge</title>
     <style>
         :root {
-            --bg: #f0f4f8;
-            --bg-card: #ffffff;
-            --bg-elevated: #f8fafc;
-            --border: rgba(59, 130, 246, 0.15);
-            --text: #1e293b;
-            --text-dim: #64748b;
-            --accent: #3b82f6;
-            --accent-light: rgba(59, 130, 246, 0.1);
-            --success: #22c55e;
-            --success-light: rgba(34, 197, 94, 0.1);
-            --warning: #f59e0b;
-            --warning-light: rgba(245, 158, 11, 0.1);
-            --error: #ef4444;
-            --purple: #8b5cf6;
-            --cyan: #06b6d4;
-            --cyan-light: rgba(6, 182, 212, 0.1);
+            --bg: #f0f4f8; --bg-card: #ffffff; --bg-elevated: #f8fafc;
+            --border: rgba(59, 130, 246, 0.15); --text: #1e293b; --text-dim: #64748b;
+            --accent: #3b82f6; --accent-light: rgba(59, 130, 246, 0.1);
+            --success: #22c55e; --success-light: rgba(34, 197, 94, 0.1);
+            --warning: #f59e0b; --error: #ef4444; --purple: #8b5cf6;
+            --cyan: #06b6d4; --cyan-light: rgba(6, 182, 212, 0.1);
         }
-        
         * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
         
-        body {
-            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            min-height: 100vh;
-        }
-        
-        .header {
-            padding: 1rem 2rem;
-            background: var(--bg-card);
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 1rem;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-        }
-        
+        .header { padding: 1rem 2rem; background: var(--bg-card); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; }
         .header-left { display: flex; align-items: center; gap: 0.75rem; }
-        
-        .logo-box {
-            width: 40px; height: 40px;
-            background: linear-gradient(135deg, var(--accent), var(--purple));
-            border-radius: 10px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 1.25rem; font-weight: 900; color: white;
-        }
-        
+        .logo-box { width: 40px; height: 40px; background: linear-gradient(135deg, var(--accent), var(--purple)); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; font-weight: 900; color: white; }
         .header h1 { font-size: 1.3rem; font-weight: 700; }
         .header h1 span { color: var(--cyan); }
         .header .subtitle { font-size: 0.65rem; color: var(--text-dim); }
-        
         .header-right { display: flex; align-items: center; gap: 0.75rem; }
-        
-        .header-btn {
-            padding: 0.5rem 1rem;
-            background: var(--bg-elevated);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            color: var(--text-dim);
-            text-decoration: none;
-            font-size: 0.7rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        
-        .header-btn:hover { background: var(--accent-light); color: var(--accent); border-color: var(--accent); }
-        
-        .status-dot {
-            width: 8px; height: 8px;
-            background: var(--success);
-            border-radius: 50%;
-            animation: pulse 2s infinite;
-        }
-        
+        .header-btn { padding: 0.5rem 1rem; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 8px; color: var(--text-dim); text-decoration: none; font-size: 0.7rem; font-weight: 600; cursor: pointer; }
+        .header-btn:hover { background: var(--accent-light); color: var(--accent); }
+        .status-dot { width: 8px; height: 8px; background: var(--success); border-radius: 50%; animation: pulse 2s infinite; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
         
-        .main {
-            display: grid;
-            grid-template-columns: 1fr 360px;
-            gap: 1.5rem;
-            padding: 1.5rem;
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-        
+        .main { display: grid; grid-template-columns: 1fr 360px; gap: 1.5rem; padding: 1.5rem; max-width: 1400px; margin: 0 auto; }
         @media (max-width: 1000px) { .main { grid-template-columns: 1fr; } }
         
-        .card {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 1.25rem;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-        }
-        
-        .card-title {
-            font-size: 0.7rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            color: var(--text-dim);
-            margin-bottom: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
+        .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .card-title { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-dim); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
         
         .input-section { display: flex; flex-direction: column; gap: 1.25rem; }
-        
-        .input-card textarea {
-            width: 100%;
-            background: var(--bg-elevated);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 1rem;
-            color: var(--text);
-            font-size: 1.1rem;
-            font-family: inherit;
-            resize: none;
-            min-height: 70px;
-            outline: none;
-        }
-        
+        .input-card textarea { width: 100%; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 8px; padding: 1rem; color: var(--text); font-size: 1.1rem; font-family: inherit; resize: none; min-height: 70px; outline: none; }
         .input-card textarea:focus { border-color: var(--accent); }
-        
-        .ask-btn {
-            width: 100%;
-            padding: 0.875rem;
-            background: linear-gradient(135deg, var(--accent), var(--purple));
-            border: none;
-            border-radius: 8px;
-            color: white;
-            font-size: 0.85rem;
-            font-weight: 600;
-            cursor: pointer;
-            margin-top: 0.75rem;
-        }
-        
+        .ask-btn { width: 100%; padding: 0.875rem; background: linear-gradient(135deg, var(--accent), var(--purple)); border: none; border-radius: 8px; color: white; font-size: 0.85rem; font-weight: 600; cursor: pointer; margin-top: 0.75rem; }
         .ask-btn:hover { opacity: 0.9; }
         .ask-btn:disabled { opacity: 0.6; cursor: wait; }
-        
         .examples { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.75rem; }
-        
-        .examples button {
-            padding: 0.35rem 0.7rem;
-            background: var(--bg-elevated);
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            color: var(--text-dim);
-            font-size: 0.7rem;
-            cursor: pointer;
-        }
-        
+        .examples button { padding: 0.35rem 0.7rem; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 6px; color: var(--text-dim); font-size: 0.7rem; cursor: pointer; }
         .examples button:hover { border-color: var(--accent); color: var(--accent); }
         
         .chain-steps { display: flex; flex-direction: column; gap: 0.4rem; }
-        
-        .chain-step {
-            display: flex;
-            align-items: center;
-            gap: 0.6rem;
-            padding: 0.5rem 0.6rem;
-            background: var(--bg-elevated);
-            border-radius: 6px;
-            border-left: 3px solid transparent;
-        }
-        
+        .chain-step { display: flex; align-items: center; gap: 0.6rem; padding: 0.5rem 0.6rem; background: var(--bg-elevated); border-radius: 6px; border-left: 3px solid transparent; }
         .chain-step.active { border-left-color: var(--cyan); background: var(--cyan-light); }
         .chain-step.complete { border-left-color: var(--success); }
         .chain-step.error { border-left-color: var(--error); }
-        
-        .chain-step .num {
-            width: 18px; height: 18px;
-            border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 0.6rem; font-weight: 700;
-            background: var(--bg);
-            color: var(--text-dim);
-        }
-        
+        .chain-step .num { width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.6rem; font-weight: 700; background: var(--bg); color: var(--text-dim); }
         .chain-step.active .num { background: var(--cyan); color: white; }
         .chain-step.complete .num { background: var(--success); color: white; }
-        
         .chain-step .label { flex: 1; font-size: 0.7rem; font-weight: 600; }
-        .chain-step .status { font-size: 0.6rem; color: var(--text-dim); max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .chain-step .status { font-size: 0.6rem; color: var(--text-dim); max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .chain-step.active .status { color: var(--cyan); }
         .chain-step.complete .status { color: var(--success); }
         
-        .tokens-grid { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.5rem; }
+        .debug-box { background: #fffbeb; border: 1px solid #fbbf24; border-radius: 8px; padding: 0.75rem; margin-top: 0.75rem; font-size: 0.65rem; font-family: monospace; }
+        .debug-box .title { font-weight: 700; color: #b45309; margin-bottom: 0.5rem; }
+        .debug-box .line { color: #78350f; margin: 0.2rem 0; }
+        .debug-box .highlight { background: #fef3c7; padding: 0.1rem 0.3rem; border-radius: 3px; }
         
-        .token {
-            padding: 0.4rem 0.5rem;
-            border-radius: 6px;
-            border: 1px solid;
-            font-size: 0.7rem;
-        }
-        
-        .token.verified { background: var(--success-light); border-color: rgba(34,197,94,0.3); }
-        .token.corrected { background: var(--warning-light); border-color: rgba(245,158,11,0.3); }
-        .token.anchor { background: var(--cyan-light); border-color: rgba(6,182,212,0.3); }
-        
-        .token .word { font-weight: 600; }
-        .token .info { font-size: 0.55rem; color: var(--text-dim); }
-        
-        .query-box {
-            background: var(--accent-light);
-            border: 1px solid rgba(59,130,246,0.2);
-            border-radius: 8px;
-            padding: 0.75rem;
-            margin-top: 0.75rem;
-        }
-        
-        .query-box .label { font-size: 0.65rem; font-weight: 600; color: var(--accent); }
-        .query-box .value { font-size: 0.8rem; color: var(--text); margin-top: 0.25rem; font-family: monospace; }
-        
-        .answer-card {
-            background: linear-gradient(135deg, var(--cyan-light), var(--accent-light));
-            border: 1px solid rgba(6,182,212,0.2);
-            display: none;
-        }
-        
+        .answer-card { background: linear-gradient(135deg, var(--cyan-light), var(--accent-light)); border: 1px solid rgba(6,182,212,0.2); display: none; }
         .answer-card.visible { display: block; }
-        
-        .answer-source {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.4rem;
-            padding: 0.25rem 0.6rem;
-            background: var(--cyan);
-            color: white;
-            border-radius: 4px;
-            font-size: 0.6rem;
-            font-weight: 700;
-            margin-bottom: 0.75rem;
-        }
-        
-        .answer-text {
-            font-size: 1rem;
-            line-height: 1.7;
-            color: var(--text);
-            white-space: pre-wrap;
-        }
-        
-        .answer-meta {
-            margin-top: 1rem;
-            padding-top: 0.75rem;
-            border-top: 1px solid rgba(6,182,212,0.2);
-            font-size: 0.7rem;
-            color: var(--text-dim);
-        }
-        
+        .answer-source { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.25rem 0.6rem; background: var(--cyan); color: white; border-radius: 4px; font-size: 0.6rem; font-weight: 700; margin-bottom: 0.75rem; }
+        .answer-text { font-size: 1rem; line-height: 1.7; color: var(--text); }
+        .answer-meta { margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid rgba(6,182,212,0.2); font-size: 0.7rem; color: var(--text-dim); }
         .answer-meta a { color: var(--accent); text-decoration: none; }
         
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 0.5rem;
-        }
-        
-        .stat {
-            background: var(--bg-elevated);
-            padding: 0.6rem;
-            border-radius: 6px;
-            text-align: center;
-        }
-        
-        .stat .value { font-size: 1.25rem; font-weight: 700; color: var(--accent); }
-        .stat .label { font-size: 0.55rem; color: var(--text-dim); text-transform: uppercase; }
+        .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem; }
+        .stat { background: var(--bg-elevated); padding: 0.6rem; border-radius: 6px; text-align: center; }
+        .stat .value { font-size: 1.1rem; font-weight: 700; color: var(--accent); }
+        .stat .label { font-size: 0.5rem; color: var(--text-dim); text-transform: uppercase; }
         
         .panel { display: flex; flex-direction: column; gap: 1rem; }
         
-        /* Logs Modal */
-        .logs-modal {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.5);
-            z-index: 1000;
-            align-items: center;
-            justify-content: center;
-        }
-        
+        .logs-modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; }
         .logs-modal.visible { display: flex; }
-        
-        .logs-content {
-            background: var(--bg-card);
-            border-radius: 12px;
-            width: 90%;
-            max-width: 800px;
-            max-height: 80vh;
-            display: flex;
-            flex-direction: column;
-            box-shadow: 0 25px 50px rgba(0,0,0,0.25);
-        }
-        
-        .logs-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 1rem 1.25rem;
-            border-bottom: 1px solid var(--border);
-            flex-shrink: 0;
-        }
-        
+        .logs-content { background: var(--bg-card); border-radius: 12px; width: 90%; max-width: 800px; max-height: 80vh; display: flex; flex-direction: column; }
+        .logs-header { display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.25rem; border-bottom: 1px solid var(--border); }
         .logs-header h3 { font-size: 0.9rem; font-weight: 700; }
-        
-        .logs-header-btns { display: flex; gap: 0.5rem; }
-        
-        .logs-copy-btn {
-            padding: 0.4rem 0.8rem;
-            background: var(--accent);
-            border: none;
-            border-radius: 6px;
-            color: white;
-            font-size: 0.7rem;
-            font-weight: 600;
-            cursor: pointer;
-        }
-        
-        .logs-close {
-            background: none;
-            border: none;
-            font-size: 1.5rem;
-            cursor: pointer;
-            color: var(--text-dim);
-        }
-        
-        .logs-body {
-            padding: 1rem;
-            overflow-y: auto;
-            flex: 1;
-        }
-        
-        .log-entry {
-            padding: 0.5rem 0.75rem;
-            background: var(--bg-elevated);
-            border-radius: 6px;
-            margin-bottom: 0.5rem;
-            border-left: 3px solid var(--accent);
-            font-size: 0.7rem;
-        }
-        
+        .logs-copy-btn { padding: 0.4rem 0.8rem; background: var(--accent); border: none; border-radius: 6px; color: white; font-size: 0.7rem; font-weight: 600; cursor: pointer; margin-right: 0.5rem; }
+        .logs-close { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-dim); }
+        .logs-body { padding: 1rem; overflow-y: auto; flex: 1; }
+        .log-entry { padding: 0.5rem 0.75rem; background: var(--bg-elevated); border-radius: 6px; margin-bottom: 0.5rem; border-left: 3px solid var(--accent); font-size: 0.65rem; }
         .log-entry.wiki { border-left-color: var(--cyan); }
-        .log-entry .url { color: var(--accent); word-break: break-all; font-family: monospace; font-size: 0.65rem; }
-        .log-entry .time { color: var(--text-dim); font-size: 0.6rem; margin-top: 0.25rem; }
+        .log-entry .url { color: var(--accent); word-break: break-all; font-family: monospace; }
+        .log-entry .time { color: var(--text-dim); font-size: 0.55rem; margin-top: 0.2rem; }
         
-        .spinner {
-            width: 14px; height: 14px;
-            border: 2px solid var(--border);
-            border-top-color: var(--cyan);
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            display: inline-block;
-        }
-        
+        .spinner { width: 14px; height: 14px; border: 2px solid var(--border); border-top-color: var(--cyan); border-radius: 50%; animation: spin 0.8s linear infinite; display: inline-block; }
         @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
@@ -377,46 +103,42 @@
             </div>
         </div>
         <div class="header-right">
-            <a href="index.html" class="header-btn">← v1.1 Local</a>
+            <a href="index.html" class="header-btn">← v1.1</a>
             <button class="header-btn" onclick="toggleLogs()">📋 Logs</button>
-            <div class="status-dot" title="Active"></div>
+            <div class="status-dot"></div>
         </div>
     </header>
     
     <div class="main">
         <div class="input-section">
             <div class="card input-card">
-                <textarea id="input" placeholder="Ask anything about the world..." spellcheck="false">How fast do birds fly?</textarea>
+                <textarea id="input" placeholder="Ask anything..." spellcheck="false">How fast do birds fly?</textarea>
                 <button class="ask-btn" id="askBtn" onclick="processQuery()">🌐 Ask World Knowledge</button>
                 <div class="examples">
-                    <button onclick="tryExample('What is quantum mechanics?')">Quantum mechanics</button>
                     <button onclick="tryExample('How fast do birds fly?')">Bird speed</button>
-                    <button onclick="tryExample('How many legs does a dog have?')">Dog legs</button>
-                    <button onclick="tryExample('wat is teh captial of Frace?')">Typos test</button>
-                    <button onclick="tryExample('Why is the sky blue?')">Sky color</button>
+                    <button onclick="tryExample('What is the speed of light?')">Light speed</button>
+                    <button onclick="tryExample('How many legs does a spider have?')">Spider legs</button>
+                    <button onclick="tryExample('What is the capital of France?')">Capital</button>
                     <button onclick="tryExample('Who invented the telephone?')">Telephone</button>
+                    <button onclick="tryExample('Why is the sky blue?')">Sky color</button>
                 </div>
             </div>
             
             <div class="card">
                 <div class="card-title">⚙️ Pipeline</div>
                 <div class="chain-steps" id="chainSteps">
-                    <div class="chain-step" data-step="correct"><div class="num">1</div><div class="label">Spell Check</div><div class="status">—</div></div>
+                    <div class="chain-step" data-step="correct"><div class="num">1</div><div class="label">Spell Correct</div><div class="status">—</div></div>
                     <div class="chain-step" data-step="analyze"><div class="num">2</div><div class="label">Question Analysis</div><div class="status">—</div></div>
-                    <div class="chain-step" data-step="search"><div class="num">3</div><div class="label">Wikipedia Search</div><div class="status">—</div></div>
-                    <div class="chain-step" data-step="extract"><div class="num">4</div><div class="label">Content Extract</div><div class="status">—</div></div>
-                    <div class="chain-step" data-step="synthesize"><div class="num">5</div><div class="label">Answer Synthesis</div><div class="status">—</div></div>
+                    <div class="chain-step" data-step="direct"><div class="num">3</div><div class="label">Direct Article Try</div><div class="status">—</div></div>
+                    <div class="chain-step" data-step="search"><div class="num">4</div><div class="label">Search + Score</div><div class="status">—</div></div>
+                    <div class="chain-step" data-step="extract"><div class="num">5</div><div class="label">Extract Answer</div><div class="status">—</div></div>
                 </div>
             </div>
             
             <div class="card">
-                <div class="card-title">🔤 Resolution</div>
-                <div class="tokens-grid" id="tokensGrid">
-                    <span style="color: var(--text-dim); font-size: 0.75rem;">Process a query...</span>
-                </div>
-                <div class="query-box" id="queryBox" style="display: none;">
-                    <div class="label">Search Query</div>
-                    <div class="value" id="searchQuery"></div>
+                <div class="card-title">🔍 Debug Trace</div>
+                <div class="debug-box" id="debugBox">
+                    <div class="title">Waiting for query...</div>
                 </div>
             </div>
             
@@ -434,18 +156,19 @@
                     <div class="stat"><div class="value" id="statApi">0</div><div class="label">API Calls</div></div>
                     <div class="stat"><div class="value" id="statTime">0ms</div><div class="label">Time</div></div>
                     <div class="stat"><div class="value" id="statType">—</div><div class="label">Q-Type</div></div>
-                    <div class="stat"><div class="value" id="statFixes">0</div><div class="label">Fixes</div></div>
+                    <div class="stat"><div class="value" id="statStrategy">—</div><div class="label">Strategy</div></div>
                 </div>
             </div>
             
             <div class="card" style="background: linear-gradient(135deg, var(--accent-light), rgba(139,92,246,0.1));">
-                <div class="card-title" style="color: var(--accent);">💡 v1.2.2 Protocol</div>
+                <div class="card-title" style="color: var(--accent);">💡 v1.2.3 Strategy</div>
                 <p style="font-size: 0.7rem; line-height: 1.6; color: var(--text-dim);">
-                    <strong>1.</strong> Correct spelling first<br>
-                    <strong>2.</strong> Detect question TYPE (how fast, how many, what is...)<br>
-                    <strong>3.</strong> Build OPTIMAL search query<br>
-                    <strong>4.</strong> Fetch Wikipedia content<br>
-                    <strong>5.</strong> SYNTHESIZE answer (extract relevant info)
+                    <strong>1. Direct Article Try</strong><br>
+                    For "What is X" → Fetch article "X" directly<br><br>
+                    <strong>2. Snippet Scoring</strong><br>
+                    Score search results by answer keywords in snippet<br><br>
+                    <strong>3. Fallback Queries</strong><br>
+                    Try multiple search strategies if first fails
                 </p>
             </div>
         </div>
@@ -455,148 +178,152 @@
         <div class="logs-content">
             <div class="logs-header">
                 <h3>📋 API Calls Log</h3>
-                <div class="logs-header-btns">
-                    <button class="logs-copy-btn" onclick="copyLogs()">📋 Copy All</button>
+                <div>
+                    <button class="logs-copy-btn" onclick="copyLogs()">📋 Copy</button>
                     <button class="logs-close" onclick="toggleLogs()">×</button>
                 </div>
             </div>
-            <div class="logs-body" id="logsBody">
-                <p style="color: var(--text-dim); font-size: 0.75rem;">No API calls yet...</p>
-            </div>
+            <div class="logs-body" id="logsBody"><p style="color: var(--text-dim);">No logs yet</p></div>
         </div>
     </div>
 
 <script>
 // =========================================================================
-// imagineAI v1.2.2 - Smarter Search + Response Synthesis
+// imagineAI v1.2.3 - Mathematical Fix: Direct Article + Snippet Scoring
 // =========================================================================
 
 const USER_AGENT = 'imagineAI/1.2 (https://intent-tensor-theory.github.io/git_0.0_imagineAI/)';
 let apiLogs = [];
 let apiCallCount = 0;
+let debugLines = [];
 
 // =========================================================================
-// ALIASES for quick spelling fixes
+// ALIASES
 // =========================================================================
 const ALIASES = {
-    'u': 'you', 'r': 'are', 'ur': 'your', 'teh': 'the', 'thier': 'their',
-    'wat': 'what', 'wut': 'what', 'wher': 'where', 'wen': 'when',
-    'captial': 'capital', 'capitol': 'capital', 'bigest': 'biggest',
-    'frace': 'france', 'planit': 'planet', 'mountan': 'mountain',
-    'eclectiry': 'electricity', 'eceltricty': 'electricity'
+    'teh': 'the', 'wat': 'what', 'wut': 'what', 'captial': 'capital',
+    'frace': 'france', 'bigest': 'biggest', 'u': 'you', 'r': 'are'
 };
 
 // =========================================================================
-// QUESTION TYPE PATTERNS - The key to semantic understanding
+// QUESTION TYPES with ANSWER KEYWORDS
+// Each type knows what words should appear in a GOOD answer
 // =========================================================================
 const QUESTION_TYPES = {
-    // "How fast do X verb" → "X verb speed" or "fastest X"
     SPEED_DO: {
         pattern: /^how\s+(fast|quick|quickly)\s+(do|does|can)\s+(.+?)\s+(fly|run|swim|move|travel|go)\??$/i,
-        buildQuery: (m) => `${m[3]} ${m[4]} speed`,
-        keywords: ['speed', 'velocity', 'mph', 'km/h', 'fastest']
+        getSubject: (m) => m[3].replace(/^(a|an|the)\s+/i, ''),
+        getVerb: (m) => m[4],
+        buildQueries: (m) => {
+            const subj = m[3].replace(/^(a|an|the)\s+/i, '');
+            const verb = m[4];
+            return [
+                `${subj} ${verb} speed`,           // "birds fly speed"
+                `${subj} flight speed`,            // "birds flight speed" 
+                `fastest ${subj}`,                 // "fastest birds"
+                `${subj} speed`,                   // "birds speed"
+                `${subj} ${verb}ing speed`         // "birds flying speed"
+            ];
+        },
+        answerKeywords: ['mph', 'km/h', 'km per hour', 'miles per hour', 'meters per second', 'm/s', 'speed', 'fast', 'velocity', /\d+\s*(mph|km|m\/s)/i],
+        directArticle: (m) => m[3].replace(/^(a|an|the)\s+/i, '') // Try "Bird" article
     },
-    // "How fast is X" → "X speed"
+    
     SPEED_IS: {
         pattern: /^how\s+(fast|quick)\s+(is|are)\s+(.+)\??$/i,
-        buildQuery: (m) => `${m[3]} speed`,
-        keywords: ['speed', 'velocity', 'fast']
+        buildQueries: (m) => {
+            const subj = m[3].replace(/^(a|an|the)\s+/i, '');
+            return [`${subj} speed`, `speed of ${subj}`, subj];
+        },
+        answerKeywords: ['mph', 'km/h', 'speed', 'velocity', 'meters per second', /\d+\s*(mph|km|m\/s)/i],
+        directArticle: (m) => m[3].replace(/^(a|an|the)\s+/i, '')
     },
-    // "How many X does Y have" → "Y X" or "Y anatomy"
+    
     COUNT_HAVE: {
         pattern: /^how\s+many\s+(\w+)\s+(does|do)\s+(?:a\s+)?(\w+)\s+have\??$/i,
-        buildQuery: (m) => `${m[3]} ${m[1]}`,
-        keywords: ['number', 'count', m => m[1]]
+        buildQueries: (m) => [`${m[3]} ${m[1]}`, `${m[3]} anatomy`, m[3]],
+        answerKeywords: ['eight', 'four', 'two', 'six', 'ten', /\b\d+\b/, 'limbs', 'pairs'],
+        directArticle: (m) => m[3] // Try "Spider" article directly
     },
-    // "How many X in Y" → "number of X in Y"
-    COUNT_IN: {
-        pattern: /^how\s+many\s+(.+?)\s+(in|on|at)\s+(.+)\??$/i,
-        buildQuery: (m) => `number of ${m[1]} ${m[2]} ${m[3]}`,
-        keywords: ['number', 'count', 'total']
-    },
-    // "How much X does Y verb" → "Y X consumption/amount"
-    QUANTITY: {
-        pattern: /^how\s+much\s+(\w+)\s+(do|does)\s+(.+?)\s+(drink|eat|consume|use|need)\??$/i,
-        buildQuery: (m) => `${m[3]} ${m[1]} ${m[4]} amount`,
-        keywords: ['amount', 'consumption', m => m[1], 'per day', 'daily']
-    },
-    // "What is X" → X
+    
     DEFINITION: {
         pattern: /^what\s+(is|are|was|were)\s+(.+)\??$/i,
-        buildQuery: (m) => m[2],
-        keywords: ['is', 'are', 'defined', 'means']
+        buildQueries: (m) => {
+            const subj = m[2].replace(/^(a|an|the)\s+/i, '');
+            return [subj];
+        },
+        answerKeywords: ['is', 'are', 'refers to', 'defined as', 'means'],
+        directArticle: (m) => m[2].replace(/^(a|an|the)\s+/i, '') // "speed of light" → try direct
     },
-    // "What is the X of Y" → "Y X"
+    
     PROPERTY: {
         pattern: /^what\s+is\s+the\s+(\w+)\s+of\s+(.+)\??$/i,
-        buildQuery: (m) => `${m[2]} ${m[1]}`,
-        keywords: [m => m[1]]
+        buildQueries: (m) => [`${m[2]} ${m[1]}`, m[2]],
+        answerKeywords: (m) => [m[1].toLowerCase()], // The property word itself
+        directArticle: (m) => m[2]
     },
-    // "Who invented X" → "X inventor" or "invention of X"
-    WHO_INVENTED: {
-        pattern: /^who\s+(invented|discovered|created|founded|built|designed)\s+(.+)\??$/i,
-        buildQuery: (m) => `${m[2]} ${m[1]} inventor`,
-        keywords: ['invented', 'created', 'inventor', 'founder']
+    
+    WHO: {
+        pattern: /^who\s+(invented|discovered|created|founded|built|wrote)\s+(.+)\??$/i,
+        buildQueries: (m) => [`${m[2]} ${m[1]}`, `${m[2]} inventor`, `invention of ${m[2]}`, m[2]],
+        answerKeywords: ['invented', 'created', 'discovered', 'founded', 'by', /\b[A-Z][a-z]+\s+[A-Z][a-z]+\b/], // Names
+        directArticle: (m) => m[2]
     },
-    // "Why is X Y" → "why X Y" or "X Y explanation"
+    
     WHY: {
         pattern: /^why\s+(is|are|do|does)\s+(.+)\??$/i,
-        buildQuery: (m) => `why ${m[2]}`,
-        keywords: ['because', 'reason', 'due to', 'caused']
+        buildQueries: (m) => [`why ${m[2]}`, m[2]],
+        answerKeywords: ['because', 'due to', 'caused by', 'reason', 'result of', 'scatter', 'wavelength'],
+        directArticle: null
     },
-    // "Where is X" → "X location"
+    
     WHERE: {
         pattern: /^where\s+(is|are)\s+(.+)\??$/i,
-        buildQuery: (m) => `${m[2]} location`,
-        keywords: ['located', 'location', 'found', 'situated']
+        buildQueries: (m) => [`${m[2]} location`, m[2]],
+        answerKeywords: ['located', 'in', 'at', 'found', 'situated', /\b[A-Z][a-z]+\b/], // Place names
+        directArticle: (m) => m[2]
     },
-    // Superlatives: "What is the largest X"
+    
     SUPERLATIVE: {
         pattern: /^what\s+is\s+the\s+(largest|biggest|smallest|tallest|fastest|longest|deepest|highest|oldest)\s+(.+)\??$/i,
-        buildQuery: (m) => `${m[1]} ${m[2]}`,
-        keywords: [m => m[1]]
+        buildQueries: (m) => [`${m[1]} ${m[2]}`, `list of ${m[1]} ${m[2]}`],
+        answerKeywords: (m) => [m[1].toLowerCase()],
+        directArticle: null
     }
 };
 
 // =========================================================================
-// CORRECT SPELLING - Quick alias lookup + Datamuse API
+// SPELLING CORRECTION
 // =========================================================================
-async function correctText(text) {
-    const words = text.toLowerCase().replace(/[?!.,]/g, ' ').split(/\s+/).filter(w => w);
-    const corrected = [];
-    const fixes = [];
+async function correctSpelling(text) {
+    let words = text.toLowerCase().split(/\s+/);
+    let fixes = [];
     
-    for (const word of words) {
-        // Check aliases first (instant)
-        if (ALIASES[word]) {
-            corrected.push(ALIASES[word]);
-            fixes.push({ from: word, to: ALIASES[word] });
-        } else {
-            // Check if word exists via Datamuse
-            const exists = await wordExists(word);
-            if (exists) {
-                corrected.push(word);
-            } else {
-                // Try to find correction
-                const fixed = await findCorrection(word);
-                corrected.push(fixed);
-                if (fixed !== word) {
-                    fixes.push({ from: word, to: fixed });
-                }
+    words = words.map(w => {
+        const clean = w.replace(/[?!.,]/g, '');
+        if (ALIASES[clean]) {
+            fixes.push({ from: clean, to: ALIASES[clean] });
+            return ALIASES[clean];
+        }
+        return clean;
+    });
+    
+    // Only check spelling for words > 3 chars that might be misspelled
+    for (let i = 0; i < words.length; i++) {
+        const w = words[i];
+        if (w.length > 3 && !await wordExists(w)) {
+            const fixed = await findCorrection(w);
+            if (fixed !== w) {
+                fixes.push({ from: w, to: fixed });
+                words[i] = fixed;
             }
         }
     }
     
-    return {
-        original: text,
-        corrected: corrected.join(' '),
-        tokens: corrected,
-        fixes
-    };
+    return { corrected: words.join(' '), fixes };
 }
 
 async function wordExists(word) {
-    if (word.length <= 2) return true; // Skip short words
     const url = `https://api.datamuse.com/words?sp=${word}&max=1`;
     logApi('dict', url);
     try {
@@ -607,16 +334,13 @@ async function wordExists(word) {
 }
 
 async function findCorrection(word) {
-    if (word.length <= 2) return word;
     const url = `https://api.datamuse.com/words?sp=${word}*&max=5`;
     logApi('dict', url);
     try {
         const res = await fetch(url);
         const data = await res.json();
         if (data.length > 0) {
-            // Find closest by Levenshtein
-            let best = data[0].word;
-            let bestDist = levenshtein(word, best);
+            let best = data[0].word, bestDist = levenshtein(word, best);
             for (const d of data) {
                 const dist = levenshtein(word, d.word);
                 if (dist < bestDist) { bestDist = dist; best = d.word; }
@@ -644,30 +368,34 @@ function levenshtein(s, t) {
 }
 
 // =========================================================================
-// ANALYZE QUESTION - Detect type and build optimal search query
+// QUESTION ANALYSIS
 // =========================================================================
-function analyzeQuestion(correctedText) {
+function analyzeQuestion(text) {
     for (const [type, config] of Object.entries(QUESTION_TYPES)) {
-        const match = correctedText.match(config.pattern);
+        const match = text.match(config.pattern);
         if (match) {
+            const keywords = typeof config.answerKeywords === 'function' 
+                ? config.answerKeywords(match) 
+                : config.answerKeywords;
             return {
                 type,
                 match,
-                searchQuery: config.buildQuery(match),
-                keywords: config.keywords.map(k => typeof k === 'function' ? k(match) : k)
+                queries: config.buildQueries(match),
+                answerKeywords: keywords,
+                directArticle: config.directArticle ? config.directArticle(match) : null
             };
         }
     }
     
-    // Fallback: extract content words
-    const stopWords = new Set(['what', 'is', 'are', 'the', 'a', 'an', 'of', 'in', 'on', 'how', 'does', 'do', 'many', 'much', 'have', 'has', 'can', 'will']);
-    const words = correctedText.split(/\s+/).filter(w => w.length > 2 && !stopWords.has(w));
-    
+    // Fallback: general
+    const stopWords = new Set(['what', 'is', 'are', 'the', 'a', 'an', 'of', 'in', 'how', 'do', 'does', 'many', 'much']);
+    const words = text.split(/\s+/).filter(w => w.length > 2 && !stopWords.has(w.toLowerCase()));
     return {
         type: 'GENERAL',
         match: null,
-        searchQuery: words.join(' '),
-        keywords: words
+        queries: [words.join(' ')],
+        answerKeywords: words,
+        directArticle: words[0]
     };
 }
 
@@ -677,7 +405,7 @@ function analyzeQuestion(correctedText) {
 async function wikiSearch(query) {
     const url = `https://en.wikipedia.org/w/api.php?` + new URLSearchParams({
         action: 'query', list: 'search', srsearch: query,
-        format: 'json', origin: '*', srlimit: 5
+        format: 'json', origin: '*', srlimit: 10
     });
     logApi('wiki', url);
     try {
@@ -687,11 +415,14 @@ async function wikiSearch(query) {
     } catch { return []; }
 }
 
-async function wikiExtract(title) {
-    const url = `https://en.wikipedia.org/w/api.php?` + new URLSearchParams({
-        action: 'query', prop: 'extracts', exintro: '1', explaintext: '1',
+async function wikiExtract(title, fullArticle = false) {
+    const params = {
+        action: 'query', prop: 'extracts', explaintext: '1',
         titles: title, format: 'json', origin: '*'
-    });
+    };
+    if (!fullArticle) params.exintro = '1';
+    
+    const url = `https://en.wikipedia.org/w/api.php?` + new URLSearchParams(params);
     logApi('wiki', url);
     try {
         const res = await fetch(url, { headers: { 'Api-User-Agent': USER_AGENT } });
@@ -704,44 +435,76 @@ async function wikiExtract(title) {
 }
 
 // =========================================================================
-// SYNTHESIZE ANSWER - Extract relevant sentences based on keywords
+// SNIPPET SCORING - Score search results by answer keywords
 // =========================================================================
-function synthesizeAnswer(extract, analysis) {
-    if (!extract) return "Couldn't find relevant information.";
+function scoreSnippet(snippet, keywords) {
+    const snippetLower = snippet.toLowerCase();
+    let score = 0;
     
-    // Split into sentences
-    const sentences = extract.match(/[^.!?]+[.!?]+/g) || [extract];
-    if (sentences.length === 0) return extract;
+    for (const kw of keywords) {
+        if (kw instanceof RegExp) {
+            if (kw.test(snippet)) score += 5;
+        } else if (snippetLower.includes(kw.toLowerCase())) {
+            score += 3;
+        }
+    }
     
-    const keywords = analysis.keywords.filter(k => k && typeof k === 'string');
+    // Bonus for numbers (often contain the answer)
+    if (/\d/.test(snippet)) score += 2;
     
-    // Score sentences by keyword matches
+    return score;
+}
+
+function scoreContent(text, keywords) {
+    const textLower = text.toLowerCase();
+    let score = 0;
+    let matches = [];
+    
+    for (const kw of keywords) {
+        if (kw instanceof RegExp) {
+            const m = text.match(kw);
+            if (m) { score += 5; matches.push(m[0]); }
+        } else if (textLower.includes(kw.toLowerCase())) {
+            score += 3;
+            matches.push(kw);
+        }
+    }
+    
+    return { score, matches };
+}
+
+// =========================================================================
+// EXTRACT ANSWER SENTENCES
+// =========================================================================
+function extractAnswer(text, keywords) {
+    const sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
+    
+    // Score each sentence
     const scored = sentences.map((s, idx) => {
-        const sLower = s.toLowerCase();
         let score = 0;
+        const sLower = s.toLowerCase();
         
-        // Keyword matches
         for (const kw of keywords) {
-            if (sLower.includes(kw.toLowerCase())) score += 3;
+            if (kw instanceof RegExp) {
+                if (kw.test(s)) score += 5;
+            } else if (sLower.includes(kw.toLowerCase())) {
+                score += 3;
+            }
         }
         
-        // Check for numbers (often contain answers)
-        if (/\d/.test(s)) score += 1;
-        
-        // Position bonus (intro often has key info)
+        // Numbers bonus
+        if (/\d/.test(s)) score += 2;
+        // Position bonus (intro is key)
         if (idx < 2) score += 2;
         
         return { sentence: s.trim(), score, idx };
     });
     
-    // Sort by score, take top sentences
     scored.sort((a, b) => b.score - a.score);
     
-    // Get top 2-3 sentences, maintain original order
-    const topIndices = scored.slice(0, 3).map(s => s.idx).sort((a, b) => a - b);
-    const result = topIndices.map(i => sentences[i].trim()).join(' ');
-    
-    return result || sentences[0];
+    // Take top 3, maintain order
+    const top = scored.slice(0, 3).sort((a, b) => a.idx - b.idx);
+    return top.map(s => s.sentence).join(' ');
 }
 
 // =========================================================================
@@ -754,72 +517,136 @@ async function processQuery() {
     const startTime = performance.now();
     apiCallCount = 0;
     apiLogs = [];
+    debugLines = [];
     
     resetSteps();
     document.getElementById('askBtn').disabled = true;
-    document.getElementById('askBtn').innerHTML = '<span class="spinner"></span> Processing...';
+    document.getElementById('askBtn').innerHTML = '<span class="spinner"></span>';
+    
+    let strategy = 'search';
+    let finalArticle = null;
+    let finalContent = null;
     
     try {
-        // STEP 1: Correct spelling
+        // STEP 1: Spelling
         setStepActive('correct');
-        const corrected = await correctText(input);
-        setStepComplete('correct', corrected.fixes.length > 0 ? `${corrected.fixes.length} fixed` : 'OK');
+        const { corrected, fixes } = await correctSpelling(input);
+        debug(`Input: "${input}"`);
+        if (fixes.length > 0) debug(`Corrected: "${corrected}" (${fixes.map(f => f.from + '→' + f.to).join(', ')})`);
+        setStepComplete('correct', fixes.length > 0 ? `${fixes.length} fixed` : 'OK');
         
-        // STEP 2: Analyze question
+        // STEP 2: Analyze
         setStepActive('analyze');
-        const analysis = analyzeQuestion(corrected.corrected);
+        const analysis = analyzeQuestion(corrected);
+        debug(`Type: ${analysis.type}`);
+        debug(`Queries: ${analysis.queries.join(' | ')}`);
+        debug(`Answer keywords: ${analysis.answerKeywords.map(k => k instanceof RegExp ? k.toString() : k).join(', ')}`);
         setStepComplete('analyze', analysis.type);
         
-        // STEP 3: Search Wikipedia
-        setStepActive('search');
-        const results = await wikiSearch(analysis.searchQuery);
-        
-        if (results.length === 0) {
-            setStepError('search', 'No results');
-            showAnswer(null, corrected, analysis, startTime);
-            return;
+        // STEP 3: Try Direct Article First
+        setStepActive('direct');
+        if (analysis.directArticle) {
+            debug(`Trying direct article: "${analysis.directArticle}"`);
+            const directContent = await wikiExtract(analysis.directArticle);
+            
+            if (directContent && directContent.extract) {
+                const { score, matches } = scoreContent(directContent.extract, analysis.answerKeywords);
+                debug(`Direct article score: ${score} (matches: ${matches.join(', ')})`);
+                
+                if (score >= 5) {
+                    strategy = 'direct';
+                    finalArticle = directContent.title;
+                    finalContent = directContent.extract;
+                    debug(`✓ Direct article has answer!`);
+                    setStepComplete('direct', `✓ ${directContent.title}`);
+                } else {
+                    debug(`✗ Direct article doesn't have answer keywords`);
+                    setStepComplete('direct', 'No match');
+                }
+            } else {
+                debug(`✗ Direct article not found`);
+                setStepComplete('direct', 'Not found');
+            }
+        } else {
+            debug(`No direct article for this question type`);
+            setStepComplete('direct', 'Skipped');
         }
         
-        // Pick best result (prefer title that matches key terms)
-        let bestResult = results[0];
-        const queryWords = analysis.searchQuery.toLowerCase().split(' ');
-        for (const r of results) {
-            const titleLower = r.title.toLowerCase();
-            const matches = queryWords.filter(w => titleLower.includes(w)).length;
-            if (matches > queryWords.filter(w => bestResult.title.toLowerCase().includes(w)).length) {
-                bestResult = r;
+        // STEP 4: Search with Snippet Scoring (if direct didn't work)
+        setStepActive('search');
+        if (!finalContent) {
+            for (const query of analysis.queries) {
+                debug(`Searching: "${query}"`);
+                const results = await wikiSearch(query);
+                
+                if (results.length === 0) {
+                    debug(`No results for "${query}"`);
+                    continue;
+                }
+                
+                // Score each result's snippet
+                const scored = results.map(r => ({
+                    ...r,
+                    score: scoreSnippet(r.snippet || '', analysis.answerKeywords)
+                }));
+                scored.sort((a, b) => b.score - a.score);
+                
+                debug(`Top results: ${scored.slice(0, 3).map(r => `${r.title}(${r.score})`).join(', ')}`);
+                
+                // Pick best result that has decent score
+                const best = scored[0];
+                if (best.score > 0 || scored.length > 0) {
+                    const content = await wikiExtract(best.title);
+                    if (content && content.extract) {
+                        const { score, matches } = scoreContent(content.extract, analysis.answerKeywords);
+                        debug(`Article "${best.title}" content score: ${score}`);
+                        
+                        if (score >= 3 || !finalContent) {
+                            strategy = 'search';
+                            finalArticle = content.title;
+                            finalContent = content.extract;
+                            if (score >= 3) {
+                                debug(`✓ Found good match!`);
+                                break;
+                            }
+                        }
+                    }
+                }
             }
         }
-        setStepComplete('search', bestResult.title);
         
-        // STEP 4: Extract content
-        setStepActive('extract');
-        const content = await wikiExtract(bestResult.title);
-        if (!content) {
-            setStepError('extract', 'Failed');
-            showAnswer(null, corrected, analysis, startTime);
-            return;
+        if (finalContent) {
+            setStepComplete('search', finalArticle);
+        } else {
+            setStepError('search', 'No results');
         }
-        setStepComplete('extract', `${content.extract.length} chars`);
         
-        // STEP 5: Synthesize answer
-        setStepActive('synthesize');
-        const answer = synthesizeAnswer(content.extract, analysis);
-        setStepComplete('synthesize', 'Done');
-        
-        showAnswer({
-            text: answer,
-            fullText: content.extract,
-            title: content.title,
-            url: `https://en.wikipedia.org/wiki/${encodeURIComponent(content.title)}`
-        }, corrected, analysis, startTime);
+        // STEP 5: Extract Answer
+        setStepActive('extract');
+        if (finalContent) {
+            const answer = extractAnswer(finalContent, analysis.answerKeywords);
+            debug(`Extracted ${answer.split('.').length} sentences`);
+            setStepComplete('extract', 'Done');
+            
+            showAnswer({
+                text: answer,
+                fullText: finalContent,
+                title: finalArticle,
+                url: `https://en.wikipedia.org/wiki/${encodeURIComponent(finalArticle)}`
+            }, analysis, strategy, startTime);
+        } else {
+            setStepError('extract', 'Failed');
+            showAnswer(null, analysis, 'none', startTime);
+        }
         
     } catch (e) {
         console.error('Pipeline error:', e);
-        showAnswer(null, { tokens: [], fixes: [] }, { type: 'ERROR', searchQuery: '' }, startTime);
+        debug(`ERROR: ${e.message}`);
+        showAnswer(null, { type: 'ERROR' }, 'error', startTime);
     } finally {
         document.getElementById('askBtn').disabled = false;
         document.getElementById('askBtn').innerHTML = '🌐 Ask World Knowledge';
+        renderDebug();
     }
 }
 
@@ -851,6 +678,17 @@ function resetSteps() {
     });
 }
 
+function debug(msg) {
+    debugLines.push(msg);
+}
+
+function renderDebug() {
+    document.getElementById('debugBox').innerHTML = `
+        <div class="title">Debug Trace</div>
+        ${debugLines.map(l => `<div class="line">${l}</div>`).join('')}
+    `;
+}
+
 function logApi(type, url) {
     apiCallCount++;
     apiLogs.unshift({ type, url, time: new Date().toLocaleTimeString() });
@@ -863,7 +701,7 @@ function updateLogsModal() {
             <div class="url">${log.url}</div>
             <div class="time">${log.time}</div>
         </div>
-    `).join('') || '<p style="color: var(--text-dim);">No logs</p>';
+    `).join('') || '<p>No logs</p>';
 }
 
 function toggleLogs() {
@@ -872,36 +710,17 @@ function toggleLogs() {
 
 function copyLogs() {
     const text = apiLogs.map(l => `[${l.time}] ${l.url}`).join('\n');
-    navigator.clipboard.writeText(text).then(() => {
-        alert('Logs copied to clipboard!');
-    });
+    navigator.clipboard.writeText(text).then(() => alert('Copied!'));
 }
 
-function showAnswer(result, corrected, analysis, startTime) {
+function showAnswer(result, analysis, strategy, startTime) {
     const elapsed = Math.round(performance.now() - startTime);
     
-    // Stats
     document.getElementById('statApi').textContent = apiCallCount;
     document.getElementById('statTime').textContent = elapsed + 'ms';
     document.getElementById('statType').textContent = analysis.type;
-    document.getElementById('statFixes').textContent = corrected.fixes?.length || 0;
+    document.getElementById('statStrategy').textContent = strategy;
     
-    // Tokens
-    const stopWords = new Set(['what', 'is', 'are', 'the', 'a', 'an', 'of', 'in', 'on', 'how', 'does', 'do', 'many', 'have']);
-    document.getElementById('tokensGrid').innerHTML = corrected.tokens?.map(t => {
-        const isFix = corrected.fixes?.some(f => f.to === t);
-        const isAnchor = !stopWords.has(t) && t.length > 2;
-        const cls = isFix ? 'corrected' : isAnchor ? 'anchor' : 'verified';
-        const fixFrom = corrected.fixes?.find(f => f.to === t)?.from;
-        const fixInfo = fixFrom ? ` ⚡${fixFrom}` : '';
-        return `<div class="token ${cls}"><span class="word">${t}${fixInfo}</span></div>`;
-    }).join('') || '<span style="color: var(--text-dim);">—</span>';
-    
-    // Search query
-    document.getElementById('queryBox').style.display = 'block';
-    document.getElementById('searchQuery').textContent = `"${analysis.searchQuery}"`;
-    
-    // Answer
     const card = document.getElementById('answerCard');
     card.classList.add('visible');
     
@@ -910,10 +729,10 @@ function showAnswer(result, corrected, analysis, startTime) {
         document.getElementById('answerText').textContent = result.text;
         document.getElementById('answerMeta').innerHTML = `
             Source: <a href="${result.url}" target="_blank">${result.title}</a> • 
-            ${apiCallCount} API calls • ${elapsed}ms
+            Strategy: ${strategy} • ${apiCallCount} API calls • ${elapsed}ms
             <br><br>
-            <details style="margin-top: 0.5rem;">
-                <summary style="cursor: pointer; color: var(--accent);">Show full Wikipedia extract</summary>
+            <details>
+                <summary style="cursor: pointer; color: var(--accent);">Full Wikipedia extract</summary>
                 <p style="margin-top: 0.5rem; padding: 0.75rem; background: var(--bg-elevated); border-radius: 6px; font-size: 0.8rem; line-height: 1.6;">
                     ${result.fullText}
                 </p>
@@ -921,7 +740,7 @@ function showAnswer(result, corrected, analysis, startTime) {
         `;
     } else {
         document.getElementById('answerSource').innerHTML = '❌ Not Found';
-        document.getElementById('answerText').textContent = "Couldn't find relevant information.";
+        document.getElementById('answerText').textContent = "Couldn't find a good answer.";
         document.getElementById('answerMeta').textContent = `${apiCallCount} API calls • ${elapsed}ms`;
     }
 }
